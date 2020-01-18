@@ -1,0 +1,56 @@
+time.sleep(1)
+print(str)
+print(nmFunction)
+print(999)
+print(id)
+print(888)
+
+
+
+--!
+files in folders must have indent
+
+------------- file
+id = 'id_m1'
+nmFunction = 'xxxx'
+print('nmFunction:')
+print(nmFunction)
+print(999)
+print(id)
+-------------
+
+
+
+
+
+
+
+"""Describe this function...
+"""
+def do_something2():
+  dType.SetIODOEx(api, 1, 0, 1)
+  dType.SetIODOEx(api, 4, 1, 1)
+  dType.SetArmOrientationEx(api, 0, 1)
+  current_pose = dType.GetPose(api)
+  dType.SetPTPCmdEx(api, 2, 350,  0,  20, 0, 1)
+  dType.SetWAITCmdEx(api, 1000, 1)
+
+
+if (dType.GetIODI(api, 1)[0]) == 1:
+  if (dType.gettime()
+  ) < 100:
+    return 1
+  do_something2()
+
+
+
+
+
+
+
+
+
+
+
+
+

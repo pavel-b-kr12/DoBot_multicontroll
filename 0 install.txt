@@ -1,0 +1,42 @@
+
+--0
+pip install PySide2
+pip install pywin32
+
+#nw^ pyside-tools
+
+py
+pip
+pip install pyqt5
+
+
+pip install pyserial
+pip install pynput
+--1
+to run - uncomment 	sys.exit(app.exec_())
+to debug from IDLE - comment it 
+
+
+
+
+
+
+
+
+
+--read lnk
+http://www.dobot.it/wp-content/uploads/2018/03/dobot-api-en.pdf
+https://www.generationrobots.com/media/Dobot-Magician-User-Manual-V1.2.4.pdf
+https://www.robotshop.com/media/files/content/d/dot/pdf/dobot-m1-user-guide-v1.0.4.pdf
+
+https://forum.dobot.cc/t/dobot-magician-rotation-axis-of-suction-cup-gripper-not-responding/219
+
+
+
+
+
+
+
+--search icon
+https://www.pngfuel.com/search?q=
+  icon free -VectorStock

@@ -1,0 +1,26 @@
+
+--0
+drop dobot dll to path | python (sys.executable)
+--2F dobot studio
+don't save must NOT delete content of file
+marker exec pos
+
+
+--
+del QT dll from this folder. They interfere with pyside2
+
+--after connect before do something
+dType.SetQueuedCmdStartExec(api,dobotId)
+
+--re from studio
+dType.SetDeviceWithL(api, dobotId, 1) #!!!! set 1
+
+--re in dll
+del *1000
+
+def SetWAITCmdEx(api, dobotId, waitTime, isQueued=0):
+    #ret = SetWAITCmd(api, dobotId, waitTime, isQueued)
+    #while(True):
+    #   if ret[0] <= GetQueuedCmdCurrentIndex(api, dobotId)[0]:
+    #        break
+    dSleep(waitTime * 1000)

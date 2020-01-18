@@ -1,0 +1,3 @@
+print(888)id = 'id_m1'
+nmFunction = 'xxxx'print(nmFunction)print(999)
+print(id)print('nm in file: xxxx')print(nmFunction )

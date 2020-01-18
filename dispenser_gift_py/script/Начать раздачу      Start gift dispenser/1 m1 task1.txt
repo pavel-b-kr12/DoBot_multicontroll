@@ -1,0 +1,26 @@
+	print(123)
+	global a123
+	a123=123
+	b123=123
+	print(12399)
+
+	thread_m1_queue.put(n0_m1_functionNameAt0)
+	thread_m1_queue.put(gripperClose)
+	thread_m1_queue.put(gripperClose)
+	thread_m1_queue.put(gripperOff)
+	print('join m1')
+	thread_m1_queue.join()
+	print('+')
+	thread_magL_queue.put(L_2_railSqrew_down_2)
+	print('join L')
+	thread_magL_queue.join()
+	print('+')
+
+	thread_m1_queue.put(gripperClose)
+	thread_m1_queue.put(gripperClose)
+	thread_m1_queue.put(gripperOff)
+	thread_magL_queue.put(L_2_railSqrew_down_2)
+	print('join all')
+	thread_m1_queue.join()
+	thread_magL_queue.join()
+	print('+')

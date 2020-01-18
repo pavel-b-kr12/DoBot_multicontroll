@@ -1,0 +1,1 @@
+pyside2-uic "C:\_wr\DoBot\DobotPythonMulti\main.ui" -o "C:\_wr\DoBot\DobotPythonMulti\main.py"

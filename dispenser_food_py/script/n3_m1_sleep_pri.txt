@@ -1,0 +1,4 @@
+id = 'm1'
+nmFunction = 'n3_m1_sleep_pri'
+time.sleep(2)
+print("876")

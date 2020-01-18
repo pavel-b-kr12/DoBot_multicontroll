@@ -1,0 +1,3 @@
+id = 'id_m1'
+nmFunction = 'id_m1_functionNameAt_1'
+print(id)

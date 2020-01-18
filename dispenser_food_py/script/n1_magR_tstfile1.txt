@@ -1,0 +1,3 @@
+id = 'magR'
+nmFunction = 'n1_magR_tstfile1zzzz'
+print(id)time.sleep(1)print(nmFunction)print("--file1--")
