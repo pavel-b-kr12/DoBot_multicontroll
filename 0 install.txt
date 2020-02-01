@@ -12,6 +12,13 @@ pip install pyqt5
 
 pip install pyserial
 pip install pynput
+
+#win32clipboard 
+pip install pywin32
+#then you should be able to import win32clipboard:
+import win32clipboard
+
+del dobot's QT dlls from exe folder
 --1
 to run - uncomment 	sys.exit(app.exec_())
 to debug from IDLE - comment it 
