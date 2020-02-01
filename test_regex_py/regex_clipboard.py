@@ -30,16 +30,18 @@ def convertClipboard():
 	win32clipboard.CloseClipboard()
 	
 	global str_out
-	str_out = print(re.sub(r"a(.*?\r\n)", r"\1 xxx %s" % 1, str_buf))
-	#print(re.sub(r"exec_str(.*?\r\n)", r"\1 xxx %s" % 1, str_buf))
+	#dType.SetHOMECmdEx(api, 1)
+	str_out = re.sub(r"dType.SetHOMECmdEx\(api, 1\)", r"dType.SetHOMECmdEx(api, %s, 1)" % 1, str_buf)
+	#print(re.sub(r"a(.*?\r\n)", r"\1 xxx %s" % 1, str_buf))
+	#print(re.sub(r"dType.SetHOMECmdEx\(api, 1\)", r"dType.SetHOMECmdEx(api, 0, 1) %s" % 1, str_buf))
 	print(str_out)
 	# win32clipboard.OpenClipboard()
 	# win32clipboard.EmptyClipboard()
 	# win32clipboard.SetClipboardText(exec_str)
 	# win32clipboard.CloseClipboard()
-	if str_out:
-		window.textEdit_in.setText(str_buf)
-		window.textEdit_out.setText(str_out)
+	#if str_out:
+	#	window.textEdit_in.setText(str_buf)
+	#	window.textEdit_out.setText(str_out)
 
 def check_clipboard():
 	convertClipboard()

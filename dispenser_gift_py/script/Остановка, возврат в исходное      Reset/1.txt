@@ -1,1 +1,2 @@
 	print("this script in reset folder")
+	print(dType.GetPoseEx(api, id_magL, 1))

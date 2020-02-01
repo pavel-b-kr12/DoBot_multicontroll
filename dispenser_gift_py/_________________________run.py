@@ -1,5 +1,7 @@
 ﻿#F4 to toggle prog panel
 
+#todo press any btn clear all green btns
+
 # QPushButton
 # {
 # font-size:20px;
@@ -88,6 +90,7 @@ maxDobotConnectCount = 10
 errorString = ['Success','NotFound','Occupied']
 
 def checkBox_ConnectAll_click(state):
+	print("checkBox_ConnectAll_click: ",state)
 	if state == 2:
 		connectDobots()
 	else: #0
@@ -107,14 +110,14 @@ def connectDobots():
 	if id_m1>-1:
 		dType.SetQueuedCmdStartExec(api,id_m1)
 	
-	id_magL = connectCOM("COM4")
+	id_magL = connectCOM("COM5")
 	window.checkBox_MagL.setChecked(id_magL!=-1)
 	window.label_MagL_id.setText(str(id_magL))
 
 	if id_magL>-1:
 		dType.SetQueuedCmdStartExec(api,id_magL)
 	
-	id_magR = connectCOM("COM5")
+	id_magR = connectCOM("COM4")
 	window.checkBox_MagR.setChecked(id_magR!=-1)
 	window.label_MagR_id.setText(str(id_magR))
 	if id_magR>-1:
@@ -130,6 +133,14 @@ def connectDobots():
 		
 		
 		#dType.SetHOMECmd(api, temp = 0, isQueued = 1)
+		
+	#initial id, for debug or create functions w.o robots
+	if(id_m1==-1):
+		id_m1=1
+	if(id_magL==-1): ########!! check
+		id_magL=2
+	if(id_magR==-1):
+		id_magR=3
 
 	
 def disconnectDobots():
@@ -145,7 +156,7 @@ def disconnectDobots():
 
 def connectCOM(COMName):
 	result = dType.ConnectDobot(api, COMName,115200)
-	print("Connect : {}, err?: {}, id: {}".format(COMName, errorString[result[0]]!=0, result[3]))
+	print("Connect : {}, err?: {}, id: {}".format(COMName, errorString[result[0]], result[3]))
 	if result[0] == 0:
 		return result[3]
 	else:
@@ -218,9 +229,10 @@ def gripperOff():
 
 	
 
-def L_1_getBottle():
-	btn=window.btn_L_1_getBottle
-	rID=id_magL
+def t3_m1_get_packet_h():
+	#
+	btn=window.t3_m1_get_packet
+	rID=id_m1
 	tskStart_mark(btn, rID)
 
 
@@ -250,8 +262,8 @@ def L_1_getBottle():
 	#time.sleep(2)
 	tskEnd_mark(btn)
 
-def L_2_railSqrew_down_2():
-	btn=window.btn_L_2_railSqrew_down_2
+def t2_f():
+	btn=window.t2
 	rID=id_magL
 	tskStart_mark(btn, rID)
 	print(inspect.currentframe().f_code.co_name)
@@ -270,21 +282,22 @@ def L_2_railSqrew_down_2():
 
 
 def getAll_In_draw():
-	print("in")
-	#GetIODO(api, dobotId,  addr)
+	print("input d:")
 	for i in range(0, 10):
-		print(dType.GetIODO(api, id_m1,  i))
+		print(i, ": ", dType.GetIODO(api, id_m1,  i))	#GetIODO(api, dobotId,  addr)
+	print("input a:")
 	for i in range(0, 5):
-		print(dType.GetIOADC(api, id_m1,  i))
+		print(i, ": ", dType.GetIOADC(api, id_m1,  i))
 
 	#SetIODO(api, dobotId, address, level, isQueued=0)
 	#dType.SetIODO(api, id_m1, 2, 1, 0)
 
 #===================================================================== GUI
 
-
+tskMarks=[]
 def tskStart_mark(elem, id):
 	print(id)
+	tskMarks.append(elem)
 	if id==id_m1:
 		elem.setStyleSheet("background-color: #ffffaa")
 	if id==id_magL:
@@ -296,9 +309,16 @@ def tskStart_mark(elem, id):
 	QApplication.processEvents()
 	#window.update()
 	#elem.hide()
+def tskWait_mark(elem, id):
+	elem.setStyleSheet("background-color: #aaaaff")
+	
 def tskEnd_mark(elem):
 	elem.setStyleSheet("background-color: #aaff88")
 	QApplication.processEvents()
+def tskMarks_clear_all():
+	for elem in tskMarks:
+		elem.setStyleSheet("background-color: #cccccc") #!!default
+	tskMarks.clear()
 
 def resetProgressView():
 	pass
@@ -730,9 +750,15 @@ def convertClipboard(id):
 	win32clipboard.CloseClipboard()
 	'''
 
-	func_str = re.sub(r"exec_str(.*?\r\n)", r"\1 xxx %s" % 1, func_str)
-	func_str = re.sub(r"(nc_str\)\r\n)", r"%s" % 1, func_str)
-	
+	#func_str = re.sub(r"exec_str(.*?\r\n)", r"\1 xxx %s" % 1, func_str)
+	#func_str = re.sub(r"(nc_str\)\r\n)", r"%s" % 1, func_str)
+	func_str = re.sub(r"SetHOMECmdEx\(api, 1\)", r"SetHOMECmdEx(api, %s, 1)" % id, str_buf)
+	func_str = re.sub(r"SetQueuedCmdForceStopExec(api)\(api, 1\)", r"SetQueuedCmdForceStopExec(api, %s)" % id, str_buf)
+	func_str = re.sub(r"GetPoseEx\(api\)", r"GetPoseEx(api, %s)" % id, str_buf)
+	func_str = re.sub(r"GetPose\(api\)", r"GetPose(api, %s)" % id, str_buf)
+	func_str = re.sub(r"SetPTPCmdEx\(api\,", r"SetPTPCmdEx(api, %s" % id, str_buf) #not exactly match
+	func_str = re.sub(r"GetIODI\(api\,", r"GetIODI(api, %s" % id, str_buf) #not exactly match
+
 	
 	global exec_str
 	exec_str="global "+nmFunction+"\r\n"
@@ -758,8 +784,142 @@ def check_clipboard_every2s():
 	threading.Timer(3.0, check_clipboard_every2s).start()
 '''		
 	
+def btnHome_f(id_,btn):
+	tskMarks_clear_all()
+	tskStart_mark(btn, id_)
+	dType.SetHOMECmdEx(api, id_, 1)
+	tskEnd_mark(btn)
+	
+def btnStop_f(id_, btn):
+	tskMarks_clear_all()
+	dType.SetQueuedCmdForceStopExec(api, id_)
+	
+#################task
+def t1_m1_pos_at_packet_h():
+	tskMarks_clear_all()
+	print("t1_m1_pos_at_packet_h")
+	thread_m1_queue.put(t1_m1_pos_at_packet_f)
+def t1_m1_pos_at_packet_f():
+	btn=window.t1_m1_pos_at_packet
+	tskStart_mark(btn, id_m1)
+	
+	print("start_Mag GetQueuedCmdCurrentIndex:",dType.GetQueuedCmdCurrentIndex(api, id_m1))
+	dType.SetQueuedCmdClear(api, id_m1) #could not work	https://forum.dobot.cc/t/clear-command-queue/250
+	
+	current_pose = dType.GetPose(api, id_m1)
+	dType.SetPTPCmdEx(api, id_m1, 2, 257,  0,  136, current_pose[3], 1)
+
+	print("m1_pos_at_packet", dType.GetPoseEx(api, id_m1, 1))
+	
+	tskEnd_mark(btn)
+	
+def t2_m1_check_packet_h():
+	tskMarks_clear_all()
+	print("t2_m1_check_packet_h")
+	thread_m1_queue.put(t2_m1_check_packet_f)
+def t2_m1_check_packet_f():
+	btn=window.t2_m1_check_packet
+	tskStart_mark(btn, id_m1)
+	##
+	tskEnd_mark(btn)
+	
+	
+def t3_m1_get_packet_h():
+	tskMarks_clear_all()
+	print("t3_m1_get_packet_h")	
+	thread_m1_queue.put(t3_m1_get_packet_f)
+def t3_m1_get_packet_f():
+	btn=window.t3_m1_get_packet
+	tskStart_mark(btn, id_m1)
+	print("t3_m1_get_packet_f")
+	
+	print("put t5_magL_wait_m1_f")
+	thread_magL_queue.put(t5_magL_wait_m1_f)
+	thread_m1_queue.put(t4_m1_packet_to_mag_site_f)
+	
+	tskEnd_mark(btn)
+	
+def t4_m1_packet_to_mag_site_h():
+	tskMarks_clear_all()
+	thread_m1_queue.put(t4_m1_packet_to_mag_site_f)
+def t4_m1_packet_to_mag_site_f():
+	btn=window.t4_m1_packet_to_mag_site
+	tskStart_mark(btn, id_m1)
+	
+	print("working long t4_m1_packet_to_mag_site_f")
+	time.sleep(8)
+	
+	dType.SetWAITCmdEx(api, id_m1, 1, 1) #api, dobotId, waitTime, isQueued
+	#dType.SetQueuedCmdStartExec(api,dobotId)
+	
+	#current_pose = dType.GetPose(api, dobotId)
+	#print("start_Mag current_pose:", current_pose)
+	#dType.SetPTPWithLCmdEx(api, dobotId, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 500, 1) #SetPTPWithLCmdEx(api, dobotId, ptpMode, x, y, z, rHead,  l, isQueued=0)
+	
+	#current_pose = dType.GetPose(api, dobotId)
+	#print("start_Mag current_pose:", current_pose)
+	#dType.SetPTPWithLCmdEx(api, dobotId, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 400, 1)
+	
+
+	
+	print("t4_m1_packet_to_mag_site_h")
+	
+	
+
+	tskEnd_mark(btn)
+	
+	
+
+	
+def t5_magL_wait_m1_h():
+	tskMarks_clear_all()
+	
+	thread_magL_queue.put(t5_magL_wait_m1_f)
+	
+def t5_magL_wait_m1_f():
+	btn=window.t5_magL_wait_m1
+	
+	tskWait_mark(btn, id_m1)
+	print('join m1')
+	thread_m1_queue.join()
+	tskStart_mark(btn, id_m1)
+
+	time.sleep(1)
+	print("t5_magL_wait_m1_f")
+	
+	thread_magL_queue.put(t6_magL_give_and_back)
+	
+	tskEnd_mark(btn)
+
+	
+def t6_magL_give_and_back():
+	tskMarks_clear_all()
+	thread_magL_queue.put(t6_magL_give_and_back_f)
+	
+def t6_magL_give_and_back_f():
+	btn=window.t6_magL_give_and_back
+	tskStart_mark(btn, id_m1)
+
+	print("t6_magL_give_and_back")
+	dType.GetIODI(api, id_m1, 17)
+		    # SetIOMultiplexingEx(api, dobotId, 2,  1, isQueued)
+    # SetIOMultiplexingEx(api, dobotId, 4,  2, isQueued)
+    # SetIODOEx(api, dobotId, 2, enableCtrl, isQueued)
+    # SetIOPWMEx(api, dobotId, 4, 10000, power, isQueued)
+	
+			#dType.SetIODOEx(api, rID, 17, 1, 1)
+			#dType.SetIODOEx(api, rID, 18, 0, 1)
+			#dType.SetWAITCmdEx(api, rID, 500, 1)
+		# dType.SetIODOEx(api, rID, 17, 1, 1)
+		# dType.SetIODOEx(api, rID, 18, 1, 1)
+		
+	tskEnd_mark(btn)
+		
 
 
+
+	
+#################
 import shutil
 if __name__ == "__main__":
 	global exepath
@@ -782,7 +942,7 @@ if __name__ == "__main__":
 
 
 	window.checkBox_ConnectAll.stateChanged.connect(checkBox_ConnectAll_click)
-	#connectDobots()
+	connectDobots()
 	
 
 	btn_fill_bg=window.btn_fill10.styleSheet()
@@ -795,21 +955,44 @@ if __name__ == "__main__":
 	window.btn_fill50.setStyleSheet(style_fill_btn)
 	window.btn_fill100.setStyleSheet(style_fill_btn)
 	window.btn_fill110.setStyleSheet(style_fill_btn)
+
+
+	window.btnHome_M1.clicked.connect(partial(btnHome_f,id_m1,window.btnHome_M1))
+	window.btnHome_MagL.clicked.connect(partial(btnHome_f,id_magL,window.btnHome_MagL))
+	window.btnHome_MagR.clicked.connect(partial(btnHome_f,id_magR,window.btnHome_MagR))
+	
+	window.btnStop_M1.clicked.connect(partial(btnStop_f,id_m1,window.btnStop_M1))
+	window.btnStop_MagL.clicked.connect(partial(btnStop_f,id_magL,window.btnStop_MagL))
+	window.btnStop_MagR.clicked.connect(partial(btnStop_f,id_magR,window.btnStop_MagR))
 	
 	window.btn_convertClipboard_m1.clicked.connect(partial(convertClipboard,'m1')) #! or id_m1 if failed to exec "id='id_m1'"
 	window.btn_convertClipboard_magL.clicked.connect(partial(convertClipboard,'magL'))
 	window.btn_convertClipboard_magR.clicked.connect(partial(convertClipboard,'magR'))
+	
 
 	dirs = [f for f in os.scandir(exepath+'script') if os.path.isdir(f)]
 	for d in dirs:
 		gen_btn_order_fromDir(d)
 
 
+
+
+	
 	window.btn_M1_gripperOpen.clicked.connect(gripperOpen)
 	window.btn_M1_gripperClose.clicked.connect(gripperClose)
 	window.btn_M1_gripperOff.clicked.connect(gripperOff)
+
+	# task
+	window.t1_m1_pos_at_packet.clicked.connect(t1_m1_pos_at_packet_h)
+	window.t2_m1_check_packet.clicked.connect(t2_m1_check_packet_h)
+	window.t3_m1_get_packet.clicked.connect(t3_m1_get_packet_h)
+	window.t4_m1_packet_to_mag_site.clicked.connect(t4_m1_packet_to_mag_site_h)
 	
-	window.btn_L_1_getBottle.clicked.connect(L_1_getBottle)
+	window.t5_magL_wait_m1.clicked.connect(t5_magL_wait_m1_h)
+	window.t6_magL_give_and_back.clicked.connect(t6_magL_give_and_back)
+	
+
+	#debug IO
 	window.btn_getAll_In_draw.clicked.connect(getAll_In_draw)
 
 
@@ -845,7 +1028,7 @@ if __name__ == "__main__":
 		# window.setGraphicsEffect(shadow)
 
 
-	#dType.DobotExec(api)
+	dType.DobotExec(api)
 	
 	#check_clipboard_every2s()
 	if len(sys.argv) > 0: # run from .bat .sh
