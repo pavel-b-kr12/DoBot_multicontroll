@@ -1,22 +1,6 @@
 ﻿#F4 to toggle prog panel
 
-#todo press any btn clear all green btns
-
-# QPushButton
-# {
-# font-size:20px;
-# color:red;
-# }
-
-#SetQueuedCmdForceStopExec(api)
-#ClearAllAlarmsState(api)
-
-#GetDeviceSN(api)
-#GetDeviceName(api)
-#GetDeviceVersion(api)
-#
-#GetPose
-#GetPoseL
+#int ClearAllAlarmsState(api, id_)
 
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import (QApplication,QDialog, QMessageBox, QPushButton)
@@ -32,13 +16,14 @@ from functools import partial
 import queue
 import inspect
 
+#from dataclasses import dataclass
+
 from ui import *
-from dobot_f import *
+exec(open("./dobot_f.py").read()) #from dobot_f import *		# common scripts		#TODO2 set as https://stackoverflow.com/questions/436198/what-is-an-alternative-to-execfile-in-python-3
+exec(open("./task_btn_f.py").read()) #from task_btn_f import *		# task scripts
 
 import DobotDllType as dType
 api = dType.load()
-
-#app = QApplication(sys.argv)
 
 #===================================================================== Dobot start
 def doTask(que, k):
@@ -80,7 +65,7 @@ def thread_magR_f(  ) :
 			continue
 		doTask(thread_magR_queue, Key.scroll_lock)
 
-#===================================
+#=================================== COM port
 
 id_m1=-2
 id_magL=-2
@@ -108,6 +93,7 @@ def connectDobots():
 	window.checkBox_M1.setChecked(id_m1!=-1)
 	window.label_M1_id.setText(str(id_m1)) #f'{10}'
 	if id_m1>-1:
+		dType.SetQueuedCmdClear(api,id_m1)
 		dType.SetQueuedCmdStartExec(api,id_m1)
 	
 	id_magL = connectCOM("COM5")
@@ -115,12 +101,14 @@ def connectDobots():
 	window.label_MagL_id.setText(str(id_magL))
 
 	if id_magL>-1:
+		dType.SetQueuedCmdClear(api,id_magL)
 		dType.SetQueuedCmdStartExec(api,id_magL)
 	
 	id_magR = connectCOM("COM4")
 	window.checkBox_MagR.setChecked(id_magR!=-1)
 	window.label_MagR_id.setText(str(id_magR))
 	if id_magR>-1:
+		dType.SetQueuedCmdClear(api,id_magR)
 		dType.SetQueuedCmdStartExec(api,id_magR)
 	
 		# state = dType.ConnectDobot(self.DobotAPI, "", 115200)
@@ -162,137 +150,8 @@ def connectCOM(COMName):
 	else:
 		return -1
 
-#===================================================================== tst
-
-def tst():
-	print('tst')
-def testDelay():
-	print(1)
-	btn=window.btn_M1_gripperOpen
-	rID=id_m1
-	tskStart_mark(btn, rID)
-	time.sleep(2)
-	print(2)
-	tskEnd_mark(btn)
-	keyboard.press(Key.scroll_lock)
-	keyboard.release(Key.scroll_lock)
-	
-	gripperOff()
-
-
-#===================================================================== dobot scripts
-
-def gripperOpen():
-	#https://stackoverflow.com/questions/683542/how-to-put-a-function-and-arguments-into-python-queue
-	ttt = threading.Thread(target=testDelay) #,args=(result[3],)
-	ttt.setDaemon(True)
-	ttt.start()
-
-	#thread_m1_queue.put(gripperClose)
-	#thread_m1_queue.put(gripperClose)
-	#thread_m1_queue.put(gripperOff)
-	
-	# dType.SetIODOEx(api, rID, 17, 0, 1)
-	# dType.SetIODOEx(api, rID, 18, 0, 1)
-	# dType.SetWAITCmdEx(api, rID, 500, 1)
-	# dType.SetIODOEx(api, rID, 17, 1, 1)
-	# dType.SetIODOEx(api, rID, 18, 1, 1)
-
-def gripperClose():
-	btn=window.btn_M1_gripperClose
-	rID=id_m1
-	tskStart_mark(btn, rID)
-	time.sleep(2)
-	print(inspect.currentframe().f_code.co_name)
-	#also caller  https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
-	
-	# dType.SetIODOEx(api, rID, 17, 1, 1)
-	# dType.SetIODOEx(api, rID, 18, 0, 1)
-	# dType.SetWAITCmdEx(api, rID, 500, 1)
-	# dType.SetIODOEx(api, rID, 17, 1, 1)
-	# dType.SetIODOEx(api, rID, 18, 1, 1)
-	
-	tskEnd_mark(btn)
-	
-def gripperOff():
-	btn=window.btn_M1_gripperOff
-
-	rID=id_m1
-	tskStart_mark(btn, rID)
-	time.sleep(2)
-	print(inspect.currentframe().f_code.co_name)
-	
-	# dType.SetIODOEx(api, rID, 17, 1, 1)
-	# dType.SetIODOEx(api, rID, 18, 1, 1)
-
-	tskEnd_mark(btn)
-
-	
-
-def t3_m1_get_packet_h():
-	#
-	btn=window.t3_m1_get_packet
-	rID=id_m1
-	tskStart_mark(btn, rID)
-
-
-	rID=id_magL
-	print(rID)
-	dType.SetDeviceWithL(api, rID, 1)
-	dType.SetWAITCmdEx(api, rID, 100, 1)
-	current_pose = dType.GetPose(api, rID)
-	dType.SetPTPWithLCmdEx(api, rID, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 100, 1)
-	dType.SetPTPWithLCmdEx(api, rID, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 130, 1)
-
-	rID=id_m1
-	gripperOpen()
-	
-	current_pose = dType.GetPose(api, rID)
-	dType.SetPTPCmdEx(api, rID, 2, 50,  (-160),  233, 99, 1)
-	current_pose = dType.GetPose(api, rID)
-	dType.SetPTPCmdEx(api, rID, 2, 50,  (-393),  233, 99, 1)
-	dType.SetWAITCmdEx(api, rID, 2000, 1)
-	current_pose = dType.GetPose(api, rID)
-	dType.SetPTPCmdEx(api, rID, 2, 50,  (-393),  200, 99, 1)
-
-
-	
-	gripperClose()
-	
-	#time.sleep(2)
-	tskEnd_mark(btn)
-
-def t2_f():
-	btn=window.t2
-	rID=id_magL
-	tskStart_mark(btn, rID)
-	print(inspect.currentframe().f_code.co_name)
-
-	'''
-	while not thread_m1_queue.empty():
-		time.sleep(0.5)
-		print(1)
-	'''
-	
-	tskEnd_mark(btn)
-
-
-	#t = Timer(2, tskStart_mark)  # function will be called 2 sec later with [delay_in_sec] as *args parameter
-	#t.start()  # returns None
-
-
-def getAll_In_draw():
-	print("input d:")
-	for i in range(0, 10):
-		print(i, ": ", dType.GetIODO(api, id_m1,  i))	#GetIODO(api, dobotId,  addr)
-	print("input a:")
-	for i in range(0, 5):
-		print(i, ": ", dType.GetIOADC(api, id_m1,  i))
-
-	#SetIODO(api, dobotId, address, level, isQueued=0)
-	#dType.SetIODO(api, id_m1, 2, 1, 0)
-
 #===================================================================== GUI
+bStopEnqueue=False
 
 tskMarks=[]
 def tskStart_mark(elem, id):
@@ -315,7 +174,10 @@ def tskWait_mark(elem, id):
 def tskEnd_mark(elem):
 	elem.setStyleSheet("background-color: #aaff88")
 	QApplication.processEvents()
-def tskMarks_clear_all():
+def tskMarks_clear_all(bStopEnque):
+	global bStopEnqueue
+	bStopEnqueue=bStopEnque
+	#print("tskMarks_clear_all", bStopEnqueue)
 	for elem in tskMarks:
 		elem.setStyleSheet("background-color: #cccccc") #!!default
 	tskMarks.clear()
@@ -752,12 +614,16 @@ def convertClipboard(id):
 
 	#func_str = re.sub(r"exec_str(.*?\r\n)", r"\1 xxx %s" % 1, func_str)
 	#func_str = re.sub(r"(nc_str\)\r\n)", r"%s" % 1, func_str)
+	
+	func_str = re.sub(r"SetQueuedCmdClear\(api\,", r"SetQueuedCmdClear(api, %s" % id, str_buf)
 	func_str = re.sub(r"SetHOMECmdEx\(api, 1\)", r"SetHOMECmdEx(api, %s, 1)" % id, str_buf)
 	func_str = re.sub(r"SetQueuedCmdForceStopExec(api)\(api, 1\)", r"SetQueuedCmdForceStopExec(api, %s)" % id, str_buf)
 	func_str = re.sub(r"GetPoseEx\(api\)", r"GetPoseEx(api, %s)" % id, str_buf)
 	func_str = re.sub(r"GetPose\(api\)", r"GetPose(api, %s)" % id, str_buf)
 	func_str = re.sub(r"SetPTPCmdEx\(api\,", r"SetPTPCmdEx(api, %s" % id, str_buf) #not exactly match
 	func_str = re.sub(r"GetIODI\(api\,", r"GetIODI(api, %s" % id, str_buf) #not exactly match
+	func_str = re.sub(r"SetHOMECmdEx\(api\,", r"SetHOMECmdEx(api, %s" % id, str_buf) #not exactly match
+	
 
 	
 	global exec_str
@@ -785,137 +651,30 @@ def check_clipboard_every2s():
 '''		
 	
 def btnHome_f(id_,btn):
-	tskMarks_clear_all()
+	tskMarks_clear_all(False)
 	tskStart_mark(btn, id_)
 	dType.SetHOMECmdEx(api, id_, 1)
 	tskEnd_mark(btn)
 	
+	
 def btnStop_f(id_, btn):
-	tskMarks_clear_all()
+	tskMarks_clear_all(True)
+	
+	queue_clear(thread_m1_queue)
+	queue_clear(thread_magL_queue)
+	queue_clear(thread_magR_queue)
+	
 	dType.SetQueuedCmdForceStopExec(api, id_)
-	
-#################task
-def t1_m1_pos_at_packet_h():
-	tskMarks_clear_all()
-	print("t1_m1_pos_at_packet_h")
-	thread_m1_queue.put(t1_m1_pos_at_packet_f)
-def t1_m1_pos_at_packet_f():
-	btn=window.t1_m1_pos_at_packet
-	tskStart_mark(btn, id_m1)
-	
-	print("start_Mag GetQueuedCmdCurrentIndex:",dType.GetQueuedCmdCurrentIndex(api, id_m1))
-	dType.SetQueuedCmdClear(api, id_m1) #could not work	https://forum.dobot.cc/t/clear-command-queue/250
-	
-	current_pose = dType.GetPose(api, id_m1)
-	dType.SetPTPCmdEx(api, id_m1, 2, 257,  0,  136, current_pose[3], 1)
-
-	print("m1_pos_at_packet", dType.GetPoseEx(api, id_m1, 1))
-	
-	tskEnd_mark(btn)
-	
-def t2_m1_check_packet_h():
-	tskMarks_clear_all()
-	print("t2_m1_check_packet_h")
-	thread_m1_queue.put(t2_m1_check_packet_f)
-def t2_m1_check_packet_f():
-	btn=window.t2_m1_check_packet
-	tskStart_mark(btn, id_m1)
-	##
-	tskEnd_mark(btn)
+def queue_clear(q):
+	with q.mutex:
+		q.queue.clear()
 	
 	
-def t3_m1_get_packet_h():
-	tskMarks_clear_all()
-	print("t3_m1_get_packet_h")	
-	thread_m1_queue.put(t3_m1_get_packet_f)
-def t3_m1_get_packet_f():
-	btn=window.t3_m1_get_packet
-	tskStart_mark(btn, id_m1)
-	print("t3_m1_get_packet_f")
+def queue_put(q, f): #TODO2 mark enqueued
+	#print("bStopEnqueue: ", bStopEnqueue)
+	if(not bStopEnqueue):
+		q.put(f)
 	
-	print("put t5_magL_wait_m1_f")
-	thread_magL_queue.put(t5_magL_wait_m1_f)
-	thread_m1_queue.put(t4_m1_packet_to_mag_site_f)
-	
-	tskEnd_mark(btn)
-	
-def t4_m1_packet_to_mag_site_h():
-	tskMarks_clear_all()
-	thread_m1_queue.put(t4_m1_packet_to_mag_site_f)
-def t4_m1_packet_to_mag_site_f():
-	btn=window.t4_m1_packet_to_mag_site
-	tskStart_mark(btn, id_m1)
-	
-	print("working long t4_m1_packet_to_mag_site_f")
-	time.sleep(8)
-	
-	dType.SetWAITCmdEx(api, id_m1, 1, 1) #api, dobotId, waitTime, isQueued
-	#dType.SetQueuedCmdStartExec(api,dobotId)
-	
-	#current_pose = dType.GetPose(api, dobotId)
-	#print("start_Mag current_pose:", current_pose)
-	#dType.SetPTPWithLCmdEx(api, dobotId, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 500, 1) #SetPTPWithLCmdEx(api, dobotId, ptpMode, x, y, z, rHead,  l, isQueued=0)
-	
-	#current_pose = dType.GetPose(api, dobotId)
-	#print("start_Mag current_pose:", current_pose)
-	#dType.SetPTPWithLCmdEx(api, dobotId, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 400, 1)
-	
-
-	
-	print("t4_m1_packet_to_mag_site_h")
-	
-	
-
-	tskEnd_mark(btn)
-	
-	
-
-	
-def t5_magL_wait_m1_h():
-	tskMarks_clear_all()
-	
-	thread_magL_queue.put(t5_magL_wait_m1_f)
-	
-def t5_magL_wait_m1_f():
-	btn=window.t5_magL_wait_m1
-	
-	tskWait_mark(btn, id_m1)
-	print('join m1')
-	thread_m1_queue.join()
-	tskStart_mark(btn, id_m1)
-
-	time.sleep(1)
-	print("t5_magL_wait_m1_f")
-	
-	thread_magL_queue.put(t6_magL_give_and_back)
-	
-	tskEnd_mark(btn)
-
-	
-def t6_magL_give_and_back():
-	tskMarks_clear_all()
-	thread_magL_queue.put(t6_magL_give_and_back_f)
-	
-def t6_magL_give_and_back_f():
-	btn=window.t6_magL_give_and_back
-	tskStart_mark(btn, id_m1)
-
-	print("t6_magL_give_and_back")
-	dType.GetIODI(api, id_m1, 17)
-		    # SetIOMultiplexingEx(api, dobotId, 2,  1, isQueued)
-    # SetIOMultiplexingEx(api, dobotId, 4,  2, isQueued)
-    # SetIODOEx(api, dobotId, 2, enableCtrl, isQueued)
-    # SetIOPWMEx(api, dobotId, 4, 10000, power, isQueued)
-	
-			#dType.SetIODOEx(api, rID, 17, 1, 1)
-			#dType.SetIODOEx(api, rID, 18, 0, 1)
-			#dType.SetWAITCmdEx(api, rID, 500, 1)
-		# dType.SetIODOEx(api, rID, 17, 1, 1)
-		# dType.SetIODOEx(api, rID, 18, 1, 1)
-		
-	tskEnd_mark(btn)
-		
-
 
 
 	
@@ -989,7 +748,7 @@ if __name__ == "__main__":
 	window.t4_m1_packet_to_mag_site.clicked.connect(t4_m1_packet_to_mag_site_h)
 	
 	window.t5_magL_wait_m1.clicked.connect(t5_magL_wait_m1_h)
-	window.t6_magL_give_and_back.clicked.connect(t6_magL_give_and_back)
+	window.t6_magL_give_and_back.clicked.connect(t6_magL_give_and_back_h)
 	
 
 	#debug IO

@@ -1113,6 +1113,15 @@
         </property>
        </widget>
       </item>
+	   <item>
+         <widget class="QCheckBox" name="checkBox_IR_debug">
+          <property name="text">
+           <string>checkBox_IR_debug</string>
+          </property>
+         </widget>
+        </item>
+	  
+	  
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
