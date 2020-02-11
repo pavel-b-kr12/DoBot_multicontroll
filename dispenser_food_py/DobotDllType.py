@@ -715,7 +715,7 @@ def GetAlarmsState(api, dobotId,  maxLen=1000):
         if result != DobotCommunicate.DobotCommunicate_NoError:
             dSleep(5)
             continue
-        brea
+        break
     #output('GetAlarmsState: alarmsState=%.4f len=%.4f' %(alarmsState.value, len.value))
     return [alarmsState.raw, len.value]
     

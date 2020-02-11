@@ -6,6 +6,9 @@ def print_state_id(id):
 	print(" %5s %5s %5s %5s %5s %5s" % (id, pos[0], pos[1], pos[2], pos[3], dType.GetIODI(api, id, 17)[0]) )
 
 
+lock1 = threading.Lock()
+		
+
 def tst():
 	print('tst')
 def testDelay():
@@ -13,16 +16,28 @@ def testDelay():
 	btn=window.btn_M1_gripperOpen
 	rID=id_m1
 	tskStart_mark(btn, rID)
-	time.sleep(2)
+	
+	
+	lock1.acquire()
+	print("lock")
+	time.sleep(5)
+	
 	print(2)
 	tskEnd_mark(btn)
 	keyboard.press(Key.scroll_lock)
 	keyboard.release(Key.scroll_lock)
 	
+
+
+	
 	gripperOff()
 	
 	#print(" GetQueuedCmdCurrentIndex:",dType.GetQueuedCmdCurrentIndex(api, id_m1))
 	#dType.SetQueuedCmdClear(api, id_m1) #could not work	https://forum.dobot.cc/t/clear-command-queue/250
+	
+def unlock1():
+	lock1.release()
+	print("unlock")
 	
 def test_queue_empty_f():
 	btn=window.t2
@@ -46,13 +61,13 @@ def test_queue_empty_f():
 
 def gripperOpen():
 	#https://stackoverflow.com/questions/683542/how-to-put-a-function-and-arguments-into-python-queue
-	ttt = threading.Thread(target=testDelay) #,args=(result[3],)
-	ttt.setDaemon(True)
-	ttt.start()
+	# ttt = threading.Thread(target=testDelay) #,args=(result[3],)
+	# ttt.setDaemon(True)
+	# ttt.start()
 
+	thread_m1_queue.put(gripperClose)
 	#thread_m1_queue.put(gripperClose)
-	#thread_m1_queue.put(gripperClose)
-	#thread_m1_queue.put(gripperOff)
+	thread_m1_queue.put(gripperOff)
 	
 	# dType.SetIODOEx(api, rID, 17, 0, 1)
 	# dType.SetIODOEx(api, rID, 18, 0, 1)
@@ -61,6 +76,11 @@ def gripperOpen():
 	# dType.SetIODOEx(api, rID, 18, 1, 1)
 
 def gripperClose():
+	# ttt = threading.Thread(target=unlock1) #,args=(result[3],)
+	# ttt.setDaemon(True)
+	# ttt.start()
+
+	
 	btn=window.btn_M1_gripperClose
 	rID=id_m1
 	tskStart_mark(btn, rID)
@@ -89,6 +109,28 @@ def gripperOff():
 
 	tskEnd_mark(btn)
 
+
+
+
+
+def btn_rail_up_20_h():
+	dType.SetPTPCmdEx(api, id_m1, 7, 0,  0,  5, 0, 1)
+	dType.ClearAllAlarmsState(api, id_m1)
+
+	#ClearAllAlarmsState(api, id_m1)
+	pass
+
+def btn_rail_down_h():
+	#print(dType.GetAlarmsState(api, id_m1) ) ##!
+	#dType.GetHOMEParams(api, id_m1)
+	#dType.GetPose(api, id_m1)[0]
+	
+	dType.SetPTPCmdEx(api, id_m1, 7, 0,  0,  -5, 0, 1)
+	dType.ClearAllAlarmsState(api, id_m1)
+	
+	pass
+	
+	
 #================================================================================ IO
 
 

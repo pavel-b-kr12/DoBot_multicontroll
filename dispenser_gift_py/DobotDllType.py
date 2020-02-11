@@ -715,7 +715,7 @@ def GetAlarmsState(api, dobotId,  maxLen=1000):
         if result != DobotCommunicate.DobotCommunicate_NoError:
             dSleep(5)
             continue
-        brea
+        break #!!?? why need
     #output('GetAlarmsState: alarmsState=%.4f len=%.4f' %(alarmsState.value, len.value))
     return [alarmsState.raw, len.value]
     
@@ -1882,6 +1882,24 @@ def SetPTPCmdEx(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0):
         if ret[0] <= GetQueuedCmdCurrentIndex(api, dobotId)[0]:
             break
         dSleep(5)
+		
+def SetPTPCmdEx_mon(api, dobotId, ptpMode, x, y, z, rHead, isQueued):
+	ret = SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued)
+	print(x, y, z)
+	while(True):
+		printPos(api, dobotId,x, y, z, rHead)
+		if ret[0] <= GetQueuedCmdCurrentIndex(api, dobotId)[0]:
+			break
+		dSleep(5)
+		#printPos(x, y, z, rHead)
+
+def printPos(api, dobotId, x, y, z, rHead):
+	window.label_m1_pos_target.setText("target: %4s %4s %4s %4s"%(x, y, z, rHead))
+	pos=GetPose(api, dobotId)
+	window.label_m1_pos_now.setText("now: %4s %4s %4s %4s"%(pos[0], pos[1], pos[2], pos[3]))
+	window.dp.setPos(x,y,z,rHead, pos)
+
+
     
 def SetIOMultiplexingEx(api, dobotId, address, multiplex, isQueued=0):
     ret = SetIOMultiplexing(api, dobotId, address, multiplex, isQueued)

@@ -2,13 +2,17 @@
 
 #int ClearAllAlarmsState(api, id_)
 
+bKeyboardLeds=False
+bMainBtns=False
+
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import (QApplication,QDialog, QMessageBox, QPushButton)
 from PySide2.QtCore import (QFile,QPoint,QObject)
 from PySide2 import (QtGui,QtCore,QtWidgets)
 
 
-import sys, threading,time, os
+
+import sys, threading,time, os, random
 import re
 from os.path import dirname, join, isdir, abspath, basename
 from threading import Timer
@@ -158,21 +162,27 @@ def tskStart_mark(elem, id):
 	print(id)
 	tskMarks.append(elem)
 	if id==id_m1:
-		elem.setStyleSheet("background-color: #ffffaa")
+		elem.setStyleSheet("background-color: RGBffffaa") #yellow rgb(255,255,55) 
+		#@@ https://stackoverflow.com/questions/32313469/stylesheet-in-pyside-not-working https://stackoverflow.com/questions/20908370/styling-with-classes-in-pyside-python
 	if id==id_magL:
 		elem.setStyleSheet("background-color: #eeffaa")
 	if id==id_magR:
 		elem.setStyleSheet("background-color: #ffeeaa")
 	#elem.update()
+	elem.setEnabled(False) #disable buttons input before task end. Alternate: clear queue or/and stop
+	#elem.hide()
 	#window.update()
+	
 	QApplication.processEvents()
 	#window.update()
-	#elem.hide()
+	
 def tskWait_mark(elem, id):
-	elem.setStyleSheet("background-color: #aaaaff")
+	elem.setStyleSheet("background-color: #aaaaff") #blue
+	pass
 	
 def tskEnd_mark(elem):
-	elem.setStyleSheet("background-color: #aaff88")
+	elem.setStyleSheet("background-color: #aaff88") #green
+	elem.setEnabled(True)
 	QApplication.processEvents()
 def tskMarks_clear_all(bStopEnque):
 	global bStopEnqueue
@@ -181,7 +191,11 @@ def tskMarks_clear_all(bStopEnque):
 	for elem in tskMarks:
 		elem.setStyleSheet("background-color: #cccccc") #!!default
 	tskMarks.clear()
-
+	
+	queue_clear(thread_m1_queue) #to not start 2nd loop #TODO stop current
+	queue_clear(thread_magL_queue)
+	queue_clear(thread_magR_queue)
+	
 def resetProgressView():
 	pass
 
@@ -283,18 +297,18 @@ QPushButton
 
 '''
 """
-       QPushButton {
-            margin: 1px;
-            border-color: #0c457e;
-            border-style: outset;
-            border-radius: 3px;
-            border-width: 1px;
-            color: black;
-            background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2198c0, stop: 1 #0d5ca6);
-        }
-        QPushButton:pressed {
-            background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #0d5ca6, stop: 1 #2198c0);
-        }"""
+	   QPushButton {
+			margin: 1px;
+			border-color: #0c457e;
+			border-style: outset;
+			border-radius: 3px;
+			border-width: 1px;
+			color: black;
+			background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2198c0, stop: 1 #0d5ca6);
+		}
+		QPushButton:pressed {
+			background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #0d5ca6, stop: 1 #2198c0);
+		}"""
 '''
 #===================================================================== generate GUI
 ffthread_nm_N=0
@@ -381,15 +395,15 @@ def gen_btn_order(nm, img):
 	btn_order_.setObjectName(nm)
 	''' name for css:
 QPushButton#exit_button {
-    border-image: url(resources/icons/64/exit.png);
+	border-image: url(resources/icons/64/exit.png);
 }
 QPushButton#config_button {
-    border-image: url(resources/icons/64/config.png);
+	border-image: url(resources/icons/64/config.png);
 }
 	'''
 	window.QGridLayout_order.addWidget(btn_order_, btn_order_row2, 1, 1, 1)
 	btn_order_row2 += 1
-	#window.btn_order_.setText(QtWidgets.QApplication.translate("mainWindow", "  Кава2       Coffe       Кофе    der Kaffee", None, -1))
+	#window.btn_order_.setText(QtWidgets.QApplication.translate("mainWindow", "  Кава2	   Coffe	   Кофе	der Kaffee", None, -1))
 	btn_order_.setText(nm)
 	
 	#global img_elem
@@ -536,7 +550,7 @@ class funcToUIGen:
 		btn.nmFunction = nmFunction
 		btn.id = id
 		btn.exec_str=stri
-                
+				
 		font = QtGui.QFont()
 		font.setPointSize(12)
 		font.setWeight(50)
@@ -635,7 +649,7 @@ def convertClipboard(id):
 	
 	print(exec_str,  file=open(nmFunction+".py", 'w'))
 	#with open(nmFunction+".py", "w") as text_file:
-	#    text_file.write(exec_str)
+	#	text_file.write(exec_str)
 	
 
 	
@@ -677,14 +691,103 @@ def queue_put(q, f): #TODO2 mark enqueued
 	
 
 
+
+
 	
-#################
+#=====================================================
+class dobotPos():
+	# now=[]
+	# target=[]
+	pos=[]
+	_lock = threading.Lock()
+	def __init__(self):
+		self.pos=[]
+		print ("init")
+	# def setPos(t, n):
+		# self._lock.acquire()
+		# now=n
+		# target=t
+		# self._lock.release()
+	def setPos(self, x,y,z,r,  n): #######################id
+		self._lock.acquire()
+		# now=n
+		# target=t
+		self.pos=[n[0],n[1],n[2],n[3],n[4], x,y,z,r]
+		widgetDraw1.update()
+		self._lock.release()
+	def getPos(self):
+		return self.pos
+#=====================================================
+dp=dobotPos()
+
+from PySide2.QtCore import Qt
+class WidgetDraw1(QtWidgets.QWidget):
+
+	def __init__(self):
+		super(WidgetDraw1, self).__init__()
+		
+		self.initUI()
+		
+	def initUI(self):	  
+
+		self.setGeometry(300, 300, 280, 170)
+		self.setWindowTitle('Points')
+		self.show()
+
+	def paintEvent(self, e):
+
+		qp = QtGui.QPainter()
+		qp.begin(self)
+		self.drawPoints(qp)
+		qp.end()
+	
+	def draw1pos(self, qp, x, y, z):
+		qp.drawEllipse(QPoint(11+x,11+y),11,11) # draw https://doc.qt.io/qtforpython/PySide2/QtGui/QPainter.html#PySide2.QtGui.PySide2.QtGui.QPainter.drawEllipse
+		#qp.drawText(x, y, 80, 40, Qt.AlignCenter | Qt.TextWordWrap, str(x)+" "+str(y)+" "+str(z))
+		qp.drawText(x, y, str(x)+" "+str(y)+" "+str(z))
+		
+		
+		
+	def drawPoints(self, qp):
+		pos=dp.getPos()
+		if(len(pos)<4):
+			return
+		qp.setPen(QtCore.Qt.red)
+		
+		
+		#qp.setBrush(Qt.black)
+		self.draw1pos(qp, pos[0], pos[1], pos[2]) #now
+		
+		qp.setBrush(Qt.blue)
+		self.draw1pos(qp, pos[5], pos[6], pos[7]) #target
+		
+							 
+		# painter.setBrush(QtCore.Qt.blue)  # Set the circle color
+		# center = QtCore.QPoint(90, 90)
+		# painter.drawEllipse(center, 40, 40)
+		# font = painter.font()
+		# font.setPointSize(30)
+		# pen = painter.pen()
+		# pen.setColor(QtCore.Qt.white)  # Set the text color
+		# painter.setPen(pen)
+		# painter.setFont(font)
+		# painter.drawText(80, 100, str(self.unreadCount))
+
+		size = self.size()
+		# for i in range(1000):
+			# x = random.randint(1, size.width()-1)
+			# y = random.randint(1, size.height()-1)
+			# qp.drawPoint(x, y)  
+
+#=====================================================
 import shutil
 if __name__ == "__main__":
 	global exepath
 	exepath = os.path.dirname(sys.argv[0])+"\\"	 #path from lunch:  os.getcwd()+"\\"
 
 	app = QApplication(sys.argv)
+	
+	
 	
 	#dobot dll install			#nw permission
 	# dobotdllpathmust=os.path.join(os.path.dirname(sys.executable),"DobotDll.dll")
@@ -698,8 +801,10 @@ if __name__ == "__main__":
 	global window
 	window = loader.load(ui_file)
 	ui_file.close()
+	
+	dType.window=window #for monitor xyz
 
-
+	window.dp=dp
 	window.checkBox_ConnectAll.stateChanged.connect(checkBox_ConnectAll_click)
 	connectDobots()
 	
@@ -730,11 +835,17 @@ if __name__ == "__main__":
 	
 
 	dirs = [f for f in os.scandir(exepath+'script') if os.path.isdir(f)]
-	for d in dirs:
-		gen_btn_order_fromDir(d)
+	
+	if(bMainBtns):
+		for d in dirs:
+			gen_btn_order_fromDir(d)
+		
 
-
-
+	global widgetDraw1
+	widgetDraw1 = WidgetDraw1()
+	#global btn_order_row2
+	window.QGridLayout_order.addWidget(widgetDraw1, btn_order_row2, 1, 1, 1)
+	btn_order_row2+=1
 
 	
 	window.btn_M1_gripperOpen.clicked.connect(gripperOpen)
@@ -753,6 +864,9 @@ if __name__ == "__main__":
 
 	#debug IO
 	window.btn_getAll_In_draw.clicked.connect(getAll_In_draw)
+	
+	window.btn_rail_up_20.clicked.connect(btn_rail_up_20_h)
+	window.btn_rail_down.clicked.connect(btn_rail_down_h)
 
 
 	window.checkBox_bex2.clicked.connect(ex2)
@@ -764,7 +878,8 @@ if __name__ == "__main__":
 	window.show()
 	class1.window=window
 	
-	threading.Thread(target=keyhandler, args=(), daemon=True).start() #?is need daemon
+	if(bKeyboardLeds):
+		threading.Thread(target=keyhandler, args=(), daemon=True).start() #?is need daemon
 
 		
 	#robot tasks queues:
