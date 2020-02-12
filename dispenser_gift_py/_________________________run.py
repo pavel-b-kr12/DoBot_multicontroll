@@ -2,12 +2,20 @@
 
 #int ClearAllAlarmsState(api, id_)
 
+bDebug=False # print
+
 bKeyboardLeds=False
 bMainBtns=False
+bBtnStyle=False #?? bug #TODO    Could not parse stylesheet of object QPushButton(0x6f17de8, name = "n0_m1_move_to_cursor")
+bIDLE=False # to run from IDLE
+#TODO:
+bDobot_to_Queue_internal=True # isQueued for internal dobot MCU SetPTPCmdEx(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0)
+bDobot_to_Queue_external=False #push to thread thread_m1_queue thread_magL_queue thread_magR_queue
 
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import (QApplication,QDialog, QMessageBox, QPushButton)
-from PySide2.QtCore import (QFile,QPoint,QObject)
+from PySide2.QtCore import (QFile,QPoint,QPointF,QObject)
+from PySide2.QtGui import (QPen, QPainter)
 from PySide2 import (QtGui,QtCore,QtWidgets)
 
 
@@ -93,14 +101,14 @@ def connectDobots():
 	# print("Start search dobot, max:", maxDobotConnectCount)
 	# for i in range(0, maxDobotConnectCount):
 		# result = dType.ConnectDobot(api, "",115200)
-	id_m1 = connectCOM("COM3")
+	id_m1 = connectCOM("COM3") #0
 	window.checkBox_M1.setChecked(id_m1!=-1)
 	window.label_M1_id.setText(str(id_m1)) #f'{10}'
 	if id_m1>-1:
 		dType.SetQueuedCmdClear(api,id_m1)
 		dType.SetQueuedCmdStartExec(api,id_m1)
 	
-	id_magL = connectCOM("COM5")
+	id_magL = connectCOM("COM4") #1
 	window.checkBox_MagL.setChecked(id_magL!=-1)
 	window.label_MagL_id.setText(str(id_magL))
 
@@ -108,7 +116,7 @@ def connectDobots():
 		dType.SetQueuedCmdClear(api,id_magL)
 		dType.SetQueuedCmdStartExec(api,id_magL)
 	
-	id_magR = connectCOM("COM4")
+	id_magR = connectCOM("COM16") #2 # rail connected
 	window.checkBox_MagR.setChecked(id_magR!=-1)
 	window.label_MagR_id.setText(str(id_magR))
 	if id_magR>-1:
@@ -148,7 +156,8 @@ def disconnectDobots():
 
 def connectCOM(COMName):
 	result = dType.ConnectDobot(api, COMName,115200)
-	print("Connect : {}, err?: {}, id: {}".format(COMName, errorString[result[0]], result[3]))
+	if(bDebug):
+		print("Connect : {}, err?: {}, id: {}".format(COMName, errorString[result[0]], result[3]))
 	if result[0] == 0:
 		return result[3]
 	else:
@@ -161,13 +170,15 @@ tskMarks=[]
 def tskStart_mark(elem, id):
 	print(id)
 	tskMarks.append(elem)
-	if id==id_m1:
-		elem.setStyleSheet("background-color: RGBffffaa") #yellow rgb(255,255,55) 
-		#@@ https://stackoverflow.com/questions/32313469/stylesheet-in-pyside-not-working https://stackoverflow.com/questions/20908370/styling-with-classes-in-pyside-python
-	if id==id_magL:
-		elem.setStyleSheet("background-color: #eeffaa")
-	if id==id_magR:
-		elem.setStyleSheet("background-color: #ffeeaa")
+	if(bBtnStyle):
+		if id==id_m1:
+			elem.setStyleSheet("background-color: RGBffffaa") #yellow rgb(255,255,55) 
+			#@@ https://stackoverflow.com/questions/32313469/stylesheet-in-pyside-not-working https://stackoverflow.com/questions/20908370/styling-with-classes-in-pyside-python
+		if id==id_magL:
+			elem.setStyleSheet("background-color: #eeffaa")
+		if id==id_magR:
+			elem.setStyleSheet("background-color: #ffeeaa")
+		
 	#elem.update()
 	elem.setEnabled(False) #disable buttons input before task end. Alternate: clear queue or/and stop
 	#elem.hide()
@@ -177,19 +188,22 @@ def tskStart_mark(elem, id):
 	#window.update()
 	
 def tskWait_mark(elem, id):
-	elem.setStyleSheet("background-color: #aaaaff") #blue
+	if(bBtnStyle):
+		elem.setStyleSheet("background-color: #aaaaff") #blue
 	pass
 	
 def tskEnd_mark(elem):
-	elem.setStyleSheet("background-color: #aaff88") #green
+	if(bBtnStyle):
+		elem.setStyleSheet("background-color: #aaff88") #green
 	elem.setEnabled(True)
 	QApplication.processEvents()
 def tskMarks_clear_all(bStopEnque):
 	global bStopEnqueue
 	bStopEnqueue=bStopEnque
 	#print("tskMarks_clear_all", bStopEnqueue)
-	for elem in tskMarks:
-		elem.setStyleSheet("background-color: #cccccc") #!!default
+	if(bBtnStyle):
+		for elem in tskMarks:
+			elem.setStyleSheet("background-color: #cccccc") #!!default
 	tskMarks.clear()
 	
 	queue_clear(thread_m1_queue) #to not start 2nd loop #TODO stop current
@@ -488,9 +502,11 @@ class funcToUIGen:
 
 			id=fileNm_strArr[1]
 			# id='id=id_'+fileNm_strArr[1]
-			print("read file nm")
-			print(fileNm_strArr)
-			print("nmFunction:"+nmFunction)
+			
+			if(bDebug):
+				print("read file nm")
+				print(fileNm_strArr)
+				print("nmFunction:"+nmFunction)
 			#print(stri)
 			# exec(id) #! TST
 			# print(id)
@@ -517,14 +533,16 @@ class funcToUIGen:
 		#cls.btn = cls.createBtn(cls)
 		stri="id = '"+id+"'\r\nnmFunction = '"+cls.nmFile+"'\r\n"+stri
 		cls.exec_str=stri	#"print('TODO exec_str')"
-		print("save file "+cls.nmFile)
-		print(stri)
+		if(bDebug):
+			print("save file "+cls.nmFile)
+			print(stri)
 		with open(exepath+"script\\"+cls.nmFile+".txt", "w") as text_file:
 			text_file.write(stri)
 		return cls()
 		
 	def __init__(self):
-		print("init funcToUIGen")
+		if(bDebug):
+			print("init funcToUIGen")
 		#self.btn = self.createBtn()
 		#self.fn = self.createFunctionFromStr()
 		
@@ -533,11 +551,13 @@ class funcToUIGen:
 	def createFunctionFromStr(nmFunction):
 		exec_strf="global "+nmFunction+"\r\ndef "+nmFunction+"():\r\n" + '\t'.join(('\n'+funcToUIGen.exec_str.lstrip()).splitlines(True))
 		# exec_strf="def fn():\r\n" + '\t'.join(('\n'+self.exec_str.lstrip()).splitlines(True))
-		print("create f: "+exec_strf)
+		if(bDebug):
+			print("create f: "+exec_strf)
 		exec(exec_strf)
 		if nmFunction == 'functionNameAt0': #!tst
 			functionNameAt0()
-			print("?functionNameAt0?")
+			if(bDebug):
+				print("?functionNameAt0?")
 		# self.fn=fn
 		# fn()
 		 
@@ -558,7 +578,8 @@ class funcToUIGen:
 		font.setBold(False)
 		btn.setFont(font)
 		btn.setStyleSheet("font: 12pt ;")
-		print("create btn: "+nmFunction)
+		if(bDebug):
+			print("create btn: "+nmFunction)
 		btn.setObjectName(nmFunction)
 		btn.setText(nmFunction)
 		if id=="m1":
@@ -577,13 +598,15 @@ class funcToUIGen:
 
 	#thread to not freeze GUI
 	def btnHandler(btn):
-		print("run btnHandler: "+btn.nmFunction)
+		if(bDebug):
+			print("run btnHandler: "+btn.nmFunction)
 		th = threading.Thread(target=funcToUIGen.btnThr, args=[btn], daemon=True) #?is need daemon
 		th.start()
 		
 	#wram worker function with UI signaling
 	def btnThr(btn):
-		print(btn.nmFunction)
+		if(bDebug):
+			print(btn.nmFunction)
 
 		#btn=window.findChild(QtWidgets.QPushButton, self.nmFunction)
 
@@ -599,7 +622,8 @@ class funcToUIGen:
 funcList = []
 import win32clipboard
 def convertClipboard(id):
-	print("convertClipboard id: "+id)
+	if(bDebug):
+		print("convertClipboard id: "+id)
 	N=window.spinBox_N.value()
 	window.spinBox_N.setValue(N+1)
 	nm=window.lineEdit_nm.text()
@@ -608,15 +632,15 @@ def convertClipboard(id):
 	#nmFile=str(N)+" "+id+" "+nm+str(N)
 	#nmBtn="btn"+nmFunction #? is need
 
-	global func_str
+	global str_buf
 	# get clipboard data
 	win32clipboard.OpenClipboard()
-	func_str = win32clipboard.GetClipboardData()
+	str_buf = win32clipboard.GetClipboardData()
 	win32clipboard.CloseClipboard()
 	'''	
-	#print(   '\t'.join(func_str.splitlines(True)))
-	#print(   '\t'.join(('\n'+func_str.lstrip()).splitlines(True)))
-	#func_str='\t'.join(('\n'+func_str.lstrip()).splitlines(True))
+	#print(   '\t'.join(str_buf.splitlines(True)))
+	#print(   '\t'.join(('\n'+str_buf.lstrip()).splitlines(True)))
+	#str_buf='\t'.join(('\n'+str_buf.lstrip()).splitlines(True))
 	'''
 	
 	'''
@@ -626,25 +650,25 @@ def convertClipboard(id):
 	win32clipboard.CloseClipboard()
 	'''
 
-	#func_str = re.sub(r"exec_str(.*?\r\n)", r"\1 xxx %s" % 1, func_str)
-	#func_str = re.sub(r"(nc_str\)\r\n)", r"%s" % 1, func_str)
+	#str_buf = re.sub(r"exec_str(.*?\r\n)", r"\1 xxx %s" % 1, str_buf)
+	#str_buf = re.sub(r"(nc_str\)\r\n)", r"%s" % 1, str_buf)
 	
-	func_str = re.sub(r"SetQueuedCmdClear\(api\,", r"SetQueuedCmdClear(api, %s" % id, str_buf)
-	func_str = re.sub(r"SetHOMECmdEx\(api, 1\)", r"SetHOMECmdEx(api, %s, 1)" % id, str_buf)
-	func_str = re.sub(r"SetQueuedCmdForceStopExec(api)\(api, 1\)", r"SetQueuedCmdForceStopExec(api, %s)" % id, str_buf)
-	func_str = re.sub(r"GetPoseEx\(api\)", r"GetPoseEx(api, %s)" % id, str_buf)
-	func_str = re.sub(r"GetPose\(api\)", r"GetPose(api, %s)" % id, str_buf)
-	func_str = re.sub(r"SetPTPCmdEx\(api\,", r"SetPTPCmdEx(api, %s" % id, str_buf) #not exactly match
-	func_str = re.sub(r"GetIODI\(api\,", r"GetIODI(api, %s" % id, str_buf) #not exactly match
-	func_str = re.sub(r"SetHOMECmdEx\(api\,", r"SetHOMECmdEx(api, %s" % id, str_buf) #not exactly match
+	str_buf = re.sub(r"SetQueuedCmdClear\(api\,", r"SetQueuedCmdClear(api, %s" % id, str_buf)
+	str_buf = re.sub(r"SetHOMECmdEx\(api, 1\)", r"SetHOMECmdEx(api, %s, 1)" % id, str_buf)
+	str_buf = re.sub(r"SetQueuedCmdForceStopExec(api)\(api, 1\)", r"SetQueuedCmdForceStopExec(api, %s)" % id, str_buf)
+	str_buf = re.sub(r"GetPoseEx\(api\)", r"GetPoseEx(api, %s)" % id, str_buf)
+	str_buf = re.sub(r"GetPose\(api\)", r"GetPose(api, %s)" % id, str_buf)
+	str_buf = re.sub(r"SetPTPCmdEx\(api\,", r"SetPTPCmdEx(api, %s" % id, str_buf) #not exactly match
+	str_buf = re.sub(r"GetIODI\(api\,", r"GetIODI(api, %s" % id, str_buf) #not exactly match
+	str_buf = re.sub(r"SetHOMECmdEx\(api\,", r"SetHOMECmdEx(api, %s" % id, str_buf) #not exactly match
 	
 
 	
 	global exec_str
 	exec_str="global "+nmFunction+"\r\n"
-	exec_str+="def "+nmFunction+"():"+func_str
+	exec_str+="def "+nmFunction+"():"+str_buf
 	exec(exec_str)
-	newBtn=funcToUIGen.createBtn(nmFunction, id, func_str)
+	newBtn=funcToUIGen.createBtn(nmFunction, id, str_buf)
 	newBtn.clicked.connect(globals()[nmFunction])
 	
 	print(exec_str,  file=open(nmFunction+".py", 'w'))
@@ -655,19 +679,25 @@ def convertClipboard(id):
 	
 
 
-	funcList.append( funcToUIGen.createAndSave(id, window, nmFunction, func_str) )
+	funcList.append( funcToUIGen.createAndSave(id, window, nmFunction, str_buf) )
 '''
 def check_clipboard_every2s():
 	#convertClipboard('1')
 	#window.textEdit_in.setText(str_buf)
-	#window.lineEdit_nm.setText(func_str)
+	#window.lineEdit_nm.setText(str_buf)
 	threading.Timer(3.0, check_clipboard_every2s).start()
 '''		
-	
+posCurrent1=[]
 def btnHome_f(id_,btn):
 	tskMarks_clear_all(False)
 	tskStart_mark(btn, id_)
-	dType.SetHOMECmdEx(api, id_, 1)
+		
+	dType.ClearAllAlarmsState(api, id_)
+	dType.SetQueuedCmdClear(api, id_)
+	
+	posCurrent1=dType.SetHOMECmdEx_mon(api, id_, 1,1)
+	#dType.printPos(api, id_,0, 0, 0, 0, True)
+	print("end of home", posCurrent1)
 	tskEnd_mark(btn)
 	
 	
@@ -695,10 +725,11 @@ def queue_put(q, f): #TODO2 mark enqueued
 
 	
 #=====================================================
-class dobotPos():
+class DobotPos():
 	# now=[]
 	# target=[]
 	pos=[]
+	posCursor=[0,0,0]
 	_lock = threading.Lock()
 	def __init__(self):
 		self.pos=[]
@@ -708,60 +739,106 @@ class dobotPos():
 		# now=n
 		# target=t
 		# self._lock.release()
+	def setPosNow(self, n): #######################id
+		self._lock.acquire()
+		# now=n
+		# target=t
+		self.pos[0:4]=[n[0],n[1],n[2],n[3],n[4]]
+		self._lock.release()
+		widgetDraw1.update()
 	def setPos(self, x,y,z,r,  n): #######################id
 		self._lock.acquire()
 		# now=n
 		# target=t
 		self.pos=[n[0],n[1],n[2],n[3],n[4], x,y,z,r]
-		widgetDraw1.update()
 		self._lock.release()
+		widgetDraw1.update()
+	def setPosCursorXY(self, x,y): #######################id
+		self._lock.acquire()
+		# now=n
+		# target=t
+		self.posCursor[0]=x
+		self.posCursor[1]=y
+		self._lock.release()
+		widgetDraw1.update()
+	def setPosCursorZ(self, z): #######################id
+		self._lock.acquire()
+		# now=n
+		# target=t
+		self.posCursor[2]=z
+		self._lock.release()
+		widgetDraw1.update()
+	def incrPosCursorZ(self, dz): #######################id
+		self._lock.acquire()
+		# now=n
+		# target=t
+		self.posCursor[2]+=dz
+		self._lock.release()
+		widgetDraw1.update()
+		#print(self.posCursor[2])
+		
 	def getPos(self):
 		return self.pos
+		
 #=====================================================
-dp=dobotPos()
+dobot_pos=DobotPos()
 
 from PySide2.QtCore import Qt
 class WidgetDraw1(QtWidgets.QWidget):
-
 	def __init__(self):
 		super(WidgetDraw1, self).__init__()
 		
 		self.initUI()
 		
 	def initUI(self):	  
-
 		self.setGeometry(300, 300, 280, 170)
-		self.setWindowTitle('Points')
+		self.setWindowTitle('dobot pos')
 		self.show()
 
-	def paintEvent(self, e):
-
+	def paintEvent(self, e): # is called every time you call update() or repaint(), for example it is called every time it is resized, the window is moved, etc.
 		qp = QtGui.QPainter()
 		qp.begin(self)
+		
+		
 		self.drawPoints(qp)
+		
+		qp.drawLine(QPointF(0, 0), QPointF(50, 50));
+		
 		qp.end()
 	
-	def draw1pos(self, qp, x, y, z):
-		qp.drawEllipse(QPoint(11+x,11+y),11,11) # draw https://doc.qt.io/qtforpython/PySide2/QtGui/QPainter.html#PySide2.QtGui.PySide2.QtGui.QPainter.drawEllipse
-		#qp.drawText(x, y, 80, 40, Qt.AlignCenter | Qt.TextWordWrap, str(x)+" "+str(y)+" "+str(z))
-		qp.drawText(x, y, str(x)+" "+str(y)+" "+str(z))
-		
-		
-		
 	def drawPoints(self, qp):
-		pos=dp.getPos()
-		if(len(pos)<4):
-			return
+		
 		qp.setPen(QtCore.Qt.red)
 		
-		
-		#qp.setBrush(Qt.black)
-		self.draw1pos(qp, pos[0], pos[1], pos[2]) #now
+		pos=dobot_pos.getPos()
+		if(len(pos)>1):
+
+			#qp.setBrush(Qt.black)
+			self.draw1pos(qp, pos[0], pos[1], pos[2]) #now
+		if(len(pos)>7):
+			qp.setBrush(Qt.blue)
+			self.draw1pos(qp, pos[5], pos[6], pos[7]) #target	
 		
 		qp.setBrush(Qt.blue)
-		self.draw1pos(qp, pos[5], pos[6], pos[7]) #target
+		self.draw1pos(qp, dobot_pos.posCursor[0], dobot_pos.posCursor[1], dobot_pos.posCursor[2]) #cursor
 		
-							 
+	def draw1pos(self, qp, x, y, z):
+		xyz_str=str(round(x,1))+" "+str(round(y,1))+" "+str(round(z,1))
+		
+		x=x/2+100
+		y=y/2+100
+		z=z/2+100
+		qp.setPen(QPen(Qt.red, 2));
+		qp.drawEllipse(QPoint(x-6,y-6),12,12) # draw https://doc.qt.io/qtforpython/PySide2/QtGui/QPainter.html#PySide2.QtGui.PySide2.QtGui.QPainter.drawEllipse
+		#qp.drawText(x, y, 80, 40, Qt.AlignCenter | Qt.TextWordWrap, str(x)+" "+str(y)+" "+str(z))
+		qp.drawText(x+12, y-6, xyz_str)
+		
+		# p.setPen(QPen(Qt.white, 3));
+		# p.drawLine(QPointF(410.738, 364.399), QPointF(-63151.2, -63197.6));
+		qp.setPen(QPen(Qt.cyan, 2));
+		qp.drawLine(QPointF(x-6, y-6), QPointF(x-6, y-6-z));
+		
+
 		# painter.setBrush(QtCore.Qt.blue)  # Set the circle color
 		# center = QtCore.QPoint(90, 90)
 		# painter.drawEllipse(center, 40, 40)
@@ -773,11 +850,29 @@ class WidgetDraw1(QtWidgets.QWidget):
 		# painter.setFont(font)
 		# painter.drawText(80, 100, str(self.unreadCount))
 
-		size = self.size()
+		#size = self.size()
 		# for i in range(1000):
 			# x = random.randint(1, size.width()-1)
 			# y = random.randint(1, size.height()-1)
-			# qp.drawPoint(x, y)  
+			# qp.drawPoint(x, y) 
+
+	
+	def mousePressEvent(self, e):
+		points = e.pos()
+		dobot_pos.setPosCursorXY(points.x(),points.y())
+		print("click at: ",points)
+		#self.update()
+	def wheelEvent(self, event):
+		# numDegrees = event.delta() / 8
+		# numSteps = numDegrees / 15
+		# if event->orientation() == Qt.Horizontal:
+			# scrollHorizontally(numSteps)
+		# else:
+			# scrollVertically(numSteps)
+		
+		dobot_pos.incrPosCursorZ(event.delta()/60)
+		event.accept()
+		#self.update()
 
 #=====================================================
 import shutil
@@ -804,7 +899,7 @@ if __name__ == "__main__":
 	
 	dType.window=window #for monitor xyz
 
-	window.dp=dp
+	window.dobot_pos=dobot_pos
 	window.checkBox_ConnectAll.stateChanged.connect(checkBox_ConnectAll_click)
 	connectDobots()
 	
@@ -901,11 +996,11 @@ if __name__ == "__main__":
 		# shadow = QtWidgets.QGraphicsDropShadowEffect(blurRadius=5, xOffset=3, yOffset=3)
 		# window.setGraphicsEffect(shadow)
 
-
-	dType.DobotExec(api)
-	
-	#check_clipboard_every2s()
-	if len(sys.argv) > 0: # run from .bat .sh
-		sys.exit(app.exec_()) # otherwise only work when running fron IDLE for debug
+	if(not bIDLE):
+		dType.DobotExec(api)
+		
+		#check_clipboard_every2s()
+		if len(sys.argv) > 0: # run from .bat .sh
+			sys.exit(app.exec_()) # otherwise only work when running fron IDLE for debug
 
 

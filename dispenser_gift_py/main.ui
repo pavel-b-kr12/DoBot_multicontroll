@@ -1203,7 +1203,7 @@
             <item>
              <widget class="QLabel" name="label_m1_pos_target">
               <property name="text">
-               <string>targrt x y z</string>
+               <string>target x y z</string>
               </property>
              </widget>
             </item>
