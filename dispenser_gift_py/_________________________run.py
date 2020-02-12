@@ -784,25 +784,35 @@ class DobotPos():
 dobot_pos=DobotPos()
 
 from PySide2.QtCore import Qt
+
+
 class WidgetDraw1(QtWidgets.QWidget):
+	
 	def __init__(self):
 		super(WidgetDraw1, self).__init__()
 		
 		self.initUI()
 		
 	def initUI(self):	  
-		self.setGeometry(300, 300, 280, 170)
-		self.setWindowTitle('dobot pos')
+		#self.setGeometry(300, 300, 280, 170)
+		#self.setWindowTitle('dobot pos')
 		self.show()
 
 	def paintEvent(self, e): # is called every time you call update() or repaint(), for example it is called every time it is resized, the window is moved, etc.
 		qp = QtGui.QPainter()
 		qp.begin(self)
+		qp.setRenderHint(QtGui.QPainter.Antialiasing, True)
 		
+		xywh=self.rect() 	#widget	#cent=self.geometry().center() #window
+		cent=xywh.center() 
+		self.cx=cent.x()
+		self.cy=cent.y()
+		#qp.drawLine(QPointF(0, 0), QPointF(50, 50));
+		#qp.drawLine(QPointF(0, 0), cent);
+		qp.drawLine(QPointF(0, self.cy), QPointF(xywh.width(), self.cy));
+		qp.drawLine(QPointF(self.cx, 0), QPointF(self.cx, xywh.height()));
 		
 		self.drawPoints(qp)
-		
-		qp.drawLine(QPointF(0, 0), QPointF(50, 50));
 		
 		qp.end()
 	
@@ -812,7 +822,6 @@ class WidgetDraw1(QtWidgets.QWidget):
 		
 		pos=dobot_pos.getPos()
 		if(len(pos)>1):
-
 			#qp.setBrush(Qt.black)
 			self.draw1pos(qp, pos[0], pos[1], pos[2]) #now
 		if(len(pos)>7):
@@ -824,13 +833,15 @@ class WidgetDraw1(QtWidgets.QWidget):
 		
 	def draw1pos(self, qp, x, y, z):
 		xyz_str=str(round(x,1))+" "+str(round(y,1))+" "+str(round(z,1))
-		
-		x=x/2+100
-		y=y/2+100
-		z=z/2+100
+		x+=self.cx
+		y+=self.cy
 		qp.setPen(QPen(Qt.red, 2));
 		qp.drawEllipse(QPoint(x-6,y-6),12,12) # draw https://doc.qt.io/qtforpython/PySide2/QtGui/QPainter.html#PySide2.QtGui.PySide2.QtGui.QPainter.drawEllipse
-		#qp.drawText(x, y, 80, 40, Qt.AlignCenter | Qt.TextWordWrap, str(x)+" "+str(y)+" "+str(z))
+);
+
+		font = QtGui.QFont("Segoe", 16)
+		font.setFixedPitch(True)
+		qp.setFont(font)
 		qp.drawText(x+12, y-6, xyz_str)
 		
 		# p.setPen(QPen(Qt.white, 3));
@@ -859,8 +870,10 @@ class WidgetDraw1(QtWidgets.QWidget):
 	
 	def mousePressEvent(self, e):
 		points = e.pos()
-		dobot_pos.setPosCursorXY(points.x(),points.y())
-		print("click at: ",points)
+
+		dobot_pos.setPosCursorXY(points.x()-self.cx,points.y()-self.cy)
+		if(bDebug):
+			print("click at: ",points)
 		#self.update()
 	def wheelEvent(self, event):
 		# numDegrees = event.delta() / 8
