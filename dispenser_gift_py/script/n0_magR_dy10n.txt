@@ -1,5 +1,5 @@
-id = 'magR'
-nmFunction = 'n0_magR_dy10n'
+id = 'magR'id_=id_magR
+nmFunction = 'tst_magR_dy10n'
 #print("dobot_pos: ",dobot_pos.pos)
-dType.SetPTPCmdEx(api, id_magR, 7, 0,  -10,  0, 0, 1)
+dType.SetPTPCmdEx(api, id_, 7, 0,  -10,  0, 0, 1)
 #print("dobot_pos: ",dobot_pos.pos)

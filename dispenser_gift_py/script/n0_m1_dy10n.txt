@@ -1,7 +1,5 @@
-id = 'm1'
-nmFunction = 'n0_m1_dy10'
-#print("dobot_pos: ",dobot_pos.pos)
-dType.SetPTPCmdEx(api, id_m1, 7, 0,  10,  0, 0, 1)
-#dType.SetPTPCmdEx(api, id_m1, 7, 0,  (-5),  0, 0, 1)
-
+id = 'm1'id_=id_m1
+nmFunction = 'n0_m1_dy10n'
+#print("dobot_pos: ",dobot_pos.pos)
+dType.SetPTPCmdEx_mon(api, id_m1, 7, 0,  -10,  0, 0, 1)
 #print("dobot_pos: ",dobot_pos.pos)

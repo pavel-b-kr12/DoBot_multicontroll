@@ -1,0 +1,4 @@
+nmFunction = 'sys_print_pos_id_selected'id_=window.id_selected 
+
+dType.printPosNow(api, id_, True) # it also dobotStates[id_].setPos#print("dobotStates[id_]: ",dobotStates[id_].pos)#dType.SetPTPCmdEx_mon(api, id_, 7, 0,  10,  0, 0, 1)
+#print("dobotStates[id_]: ",dobotStates[id_].pos)

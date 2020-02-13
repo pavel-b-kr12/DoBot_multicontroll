@@ -1,4 +1,3 @@
-id = 'magR'
-nmFunction = 'n0_m1_move_to_cursor_relative'id_=id_magR
+nmFunction = 'sys_printQueue_id_selected'id_=window.id_selected
 print("dobotStates[id_]: ",dobotStates[id_].posCursor)
 dType.printQueue_i(api, id_)

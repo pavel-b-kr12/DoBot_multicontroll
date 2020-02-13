@@ -1,6 +1,0 @@
-id = 'magR'
-nmFunction = 'n0_magR_move_to_cursor_relative'id_=id_magR
-id_=window.id_selected 
-print("dobotStates[id_]: ",dobotStates[id_].posCursor)
-dType.SetPTPCmdEx(api, id_, 7, dobotStates[id_].posCursor[0],  dobotStates[id_].posCursor[1],  dobotStates[id_].posCursor[2], 0, 1)
-print("dobotStates[id_]: ",dobotStates[id_].pos)

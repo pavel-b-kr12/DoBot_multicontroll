@@ -82,15 +82,20 @@ def on_press(key):  #https://pythonhosted.org/pynput/keyboard.html#monitoring-th
 
 def on_release(key):
 	class1.key=key
+
 	if(key is None):
+		print("! key None")
 		return False
 		
 	if key == KeyCode.from_char('p'):
 		pass
 	#print('{0} release'.format(key))
 
-	if(key.char.isdigit()):
-		id_selected=int(key.char) 
+	if(hasattr(key, 'char') and key.char.isdigit()):
+		id_selected=int(key.char)
+		if(id_selected==3):
+			id_selected=0
+		
 		#print(id_selected)
 		class1.window.id_selected=id_selected #global nw here so sore in window
 		class1.window.widgetDraw1.update()

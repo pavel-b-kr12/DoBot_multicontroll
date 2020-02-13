@@ -6,7 +6,7 @@ bDebug=False # print
 
 bKeyboardLeds=False
 bMainBtns=False
-bBtnStyle=False #?? bug #TODO    Could not parse stylesheet of object QPushButton(0x6f17de8, name = "n0_m1_move_to_cursor")
+bBtnStyle=True #?? bug #TODO    Could not parse stylesheet of object QPushButton(0x6f17de8, name = "n0_m1_move_to_cursor")
 bIDLE=False #False True to run from IDLE
 #TODO:
 bDobot_to_Queue_internal=True # isQueued for internal dobot MCU SetPTPCmdEx(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0)
@@ -158,7 +158,7 @@ def tskStart_mark(elem, id):
 	tskMarks.append(elem)
 	if(bBtnStyle):
 		if id==id_m1:
-			elem.setStyleSheet("background-color: RGBffffaa") #yellow rgb(255,255,55) 
+			elem.setStyleSheet("background-color: #ffffaa") #yellow rgb(255,255,55) 
 			#@@ https://stackoverflow.com/questions/32313469/stylesheet-in-pyside-not-working https://stackoverflow.com/questions/20908370/styling-with-classes-in-pyside-python
 		if id==id_magL:
 			elem.setStyleSheet("background-color: #eeffaa")
@@ -260,7 +260,7 @@ def btn_handler_btn_fill110():
 style_order_btn="""
 QPushButton
 {
- font-size:28px;
+ font-size:22px;
  font-weight:bold;
  background-color: #dddddd
 }
@@ -268,7 +268,7 @@ QPushButton
 style_order_btn_act="""
 QPushButton
 {
- font-size:28px;
+ font-size:22px;
  font-weight:bold;
  background-color: #ffaa88
 }
@@ -278,7 +278,7 @@ QPushButton
 style_fill_btn="""
 QPushButton
 {
- font-size:28px;
+ font-size:22px;
  font-weight:bold;
  background-color: #dddddd
 }
@@ -286,7 +286,7 @@ QPushButton
 style_fill_btn_selected="""
 QPushButton
 {
- font-size:28px;
+ font-size:22px;
  font-weight:bold;
  background-color: #aaaaff
 }
