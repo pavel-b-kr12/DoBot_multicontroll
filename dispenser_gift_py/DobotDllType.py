@@ -1852,8 +1852,7 @@ def SetHOMECmdEx(api, dobotId,  temp,  isQueued=0):
 def printQueue_i(api,dobotId):
 	queuedCmdIndex = c_uint64(0)
 	result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
-	
-	print("queue_i, byref: %4s %4s"%( GetQueuedCmdCurrentIndex(api, dobotId)[0], queuedCmdIndex.value))
+	#print("queue_i, byref: %4s %4s"%( GetQueuedCmdCurrentIndex(api, dobotId)[0], queuedCmdIndex.value))
 	
 def SetHOMECmdEx_mon(api, dobotId,  temp,  isQueued=0): #TODO temp why need del
 	print(1)
@@ -1967,16 +1966,17 @@ def SetPTPCmdEx_mon(api, dobotId, ptpMode, x, y, z, rHead, isQueued):
 def printPosNow(api, dobotId, bPrint=False):
 	pos=GetPose(api, dobotId)
 	window.label_m1_pos_now.setText("now: %4s %4s %4s %4s"%(round(pos[0],1), round(pos[1],1), round(pos[2],1), round(pos[3],1)))
-	window.dobot_pos.setPosNow(pos) #TODO opt disableupd if run from printPos as it set all together
+	if(window.dobotStates[dobotId] is not None):
+		window.dobotStates[dobotId].setPosNow(pos) #TODO opt disableupd if run from printPos as it set all together
 	if(bPrint):
 		print("pos of %4s : %4s %4s %4s %4s" %( dobotId, pos[0], pos[1], pos[2], pos[3] ))
 	return pos
 
-def printPos(api, dobotId, x, y, z, rHead, bPrint=False):
+def printPos(api, dobotId, x, y, z, rHead, bPrint=False): # TODO separate print targ , print now
 	window.label_m1_pos_target.setText("target: %4s %4s %4s %4s"%(round(x,1), round(y,1), round(z,1), round(rHead,1))) # %4s %4d round(x,2) !!TODO
 	pos=printPosNow(api, dobotId, bPrint)
-	
-	window.dobot_pos.setPos(x,y,z,rHead, pos)
+	#if(window.dobotStates[dobotId] is not None):
+	#	window.dobotStates[dobotId].setPos(x,y,z,rHead, pos)
 	
 	return pos
 

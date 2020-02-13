@@ -1,5 +1,5 @@
 id = 'magR'
-nmFunction = 'n0_m1_move_to_cursor_relative'
+nmFunction = 'n0_m1_move_to_cursor_relative'id_=id_magR
 #print("dobot_pos: ",dobot_pos.pos)
-dType.SetPTPCmdEx_mon(api, id_magR, 7, 0,  10,  0, 0, 1)
+dType.SetPTPCmdEx_mon(api, id_, 7, 0,  10,  0, 0, 1)
 #print("dobot_pos: ",dobot_pos.pos)

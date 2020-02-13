@@ -110,115 +110,47 @@ def gripperOff():
 	tskEnd_mark(btn)
 
 
-
-
-
 def btn_rail_up_20_h():
 	dType.SetPTPCmdEx(api, id_m1, 7, 0,  0,  5, 0, 1)
 	dType.ClearAllAlarmsState(api, id_m1)
 
 	#ClearAllAlarmsState(api, id_m1)
-	pass
 
 def btn_rail_down_h():
 	#print(dType.GetAlarmsState(api, id_m1) ) ##!
 	#dType.GetHOMEParams(api, id_m1)
 	#dType.GetPose(api, id_m1)[0]
 	
-	dType.SetPTPCmdEx(api, id_m1, 7, 0,  0,  -5, 0, 1)
 	dType.ClearAllAlarmsState(api, id_m1)
-	
-	pass
-	
-	
+	dType.SetPTPCmdEx(api, id_m1, 7, 0,  0,  -5, 0, 1)
+
+
 #================================================================================ IO
 
-
 def getAll_In_draw():
-	print("input d17:")
 
-	print("input d:")
+	print("input for id %4s d:"%(window.id_selected))
 	for i in range(11, 19):
-		print(i, ": ", dType.GetIODI(api, id_m1,  i)[0])	#GetIODO(api, dobotId,  addr)
+		print(i, ": ", dType.GetIODI(api, window.id_selected,  i)[0])	#GetIODO(api, dobotId,  addr)
 	#print("input a:")
 	#for i in range(0, 5):
 	#	print(i, ": ", dType.GetIOADC(api, id_m1,  i)[0])
 
 	#SetIODO(api, dobotId, address, level, isQueued=0)
 	#dType.SetIODO(api, id_m1, 2, 1, 0)
+
+def SetIODOEx_h(self, id_, N): # !! or window.id_selected
+	btn=self
+	#tskStart_mark(btn, id_)
 	
+	bex=dType.GetIODO(api, id_, N)
+	print(type(bex))
+	print(str(bex==1))
 	
-bex2=0
-def ex2():
-	print(2)
-	btn=window.checkBox_bex2
-	tskStart_mark(btn)
- 
-	global bex2
-	bex2= not bex2
-	window.checkBox_bex2.setChecked(bex2)
+	bex= not (bex==1)
+	print(str(bex))
+	btn.setChecked(bex)
 	
-	rID=id_m1
-	dType.SetIODOEx(api, rID, 2, bex2, 1)
+	#dType.SetIODOEx(api, id_, 2, bex2, 1) #TODO check
 
-	tskEnd_mark(btn)
-
-
-bex3=0
-def ex3():
-	btn=window.checkBox_bex3
-	tskStart_mark(btn)
-
-	global bex3
-	bex3= not bex3
-	window.checkBox_bex3.setChecked(bex3)
-	
-	rID=id_m1
-	dType.SetIODOEx(api, rID, 2, bex3, 1)
-
-	tskEnd_mark(btn)
-
-
-bex4=0
-def ex4():
-	btn=window.checkBox_bex4
-	tskStart_mark(btn)
-
-	global bex4
-	bex4= not bex4
-	window.checkBox_bex4.setChecked(bex4)
-	
-	rID=id_m1
-	dType.SetIODOEx(api, rID, 2, bex4, 1)
-
-	tskEnd_mark(btn)
-	
-
-bex5=0
-def ex5():
-	btn=window.checkBox_bex5
-	tskStart_mark(btn)
-
-	global bex5
-	bex5= not bex5
-	window.checkBox_bex5.setChecked(bex5)
-	
-	rID=id_m1
-	dType.SetIODOEx(api, rID, 2, bex5, 1)
-
-	tskEnd_mark(btn)
-
-
-bex6=0
-def ex6():
-	btn=window.checkBox_bex6
-	tskStart_mark(btn)
-
-	global bex6
-	bex6= not bex6
-	window.checkBox_bex6.setChecked(bex6)
-	
-	rID=id_m1
-	dType.SetIODOEx(api, rID, 2, bex6, 1)
-
-	tskEnd_mark(btn)
+	#tskEnd_mark(btn)

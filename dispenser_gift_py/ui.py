@@ -82,6 +82,9 @@ def on_press(key):  #https://pythonhosted.org/pynput/keyboard.html#monitoring-th
 
 def on_release(key):
 	class1.key=key
+	if(key is None):
+		return False
+		
 	if key == KeyCode.from_char('p'):
 		pass
 	#print('{0} release'.format(key))

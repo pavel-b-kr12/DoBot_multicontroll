@@ -695,6 +695,7 @@ def btnStop_f(id_, btn):
 	queue_clear(thread_magR_queue)
 	
 	dType.SetQueuedCmdForceStopExec(api, id_)
+	dType.ClearAllAlarmsState(api, id_)
 def queue_clear(q):
 	with q.mutex:
 		q.queue.clear()
@@ -902,6 +903,7 @@ if __name__ == "__main__":
 	
 	dType.window=window #for monitor xyz
 	window.id_selected=0
+	window.dobotStates=dobotStates
 
 	window.checkBox_ConnectAll.stateChanged.connect(checkBox_ConnectAll_click)
 	connectDobots()
@@ -968,17 +970,14 @@ if __name__ == "__main__":
 	window.btn_rail_down.clicked.connect(btn_rail_down_h)
 
 
-	window.checkBox_bex2.clicked.connect(ex2)
-	window.checkBox_bex3.clicked.connect(ex3)
-	window.checkBox_bex4.clicked.connect(ex4)
-	window.checkBox_bex5.clicked.connect(ex5)
-	window.checkBox_bex6.clicked.connect(ex6)
+	window.checkBox_bex2.clicked.connect(partial(SetIODOEx_h,window.checkBox_bex2, id_m1, 2))
+	window.checkBox_bex3.clicked.connect(partial(SetIODOEx_h,window.checkBox_bex3, id_m1, 3))
+	window.checkBox_bex4.clicked.connect(partial(SetIODOEx_h,window.checkBox_bex4, id_m1, 4))
+	window.checkBox_bex5.clicked.connect(partial(SetIODOEx_h,window.checkBox_bex5, id_m1, 5))
+	window.checkBox_bex6.clicked.connect(partial(SetIODOEx_h,window.checkBox_bex6, id_m1, 6))
 	
 	window.show()
 	class1.window=window
-	
-	
-	
 	
 	threading.Thread(target=keyhandler, args=(), daemon=True).start() #?is need daemon
 

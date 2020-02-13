@@ -1,6 +1,6 @@
 id = 'magR'
-nmFunction = 'n0_m1_move_to_cursor_relative'
-print("dobot_pos: ",dobot_pos.posCursor)
+nmFunction = 'n0_m1_move_to_cursor_relative'id_=id_magR
+print("dobot_pos: ",dobotStates[id_].posCursor)
 current_pose = dType.GetPose(api, dobotId)
 dType.SetPTPCmdEx(api, id_magR, 2, 200,  0,  0, current_pose[3], 1)
-print("dobot_pos: ",dobot_pos.posCursor)
+print("dobot_pos: ",dobotStates[id_].posCursor)

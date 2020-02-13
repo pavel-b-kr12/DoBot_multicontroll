@@ -1,4 +1,4 @@
 id = 'magR'
-nmFunction = 'n0_m1_move_to_cursor_relative'
-print("dobot_pos: ",dobot_pos.posCursor)
-dType.printQueue_i(api, id_magR)
+nmFunction = 'n0_m1_move_to_cursor_relative'id_=id_magR
+print("dobotStates[id_]: ",dobotStates[id_].posCursor)
+dType.printQueue_i(api, id_)
