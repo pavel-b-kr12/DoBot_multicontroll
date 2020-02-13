@@ -7,7 +7,7 @@ bDebug=False # print
 bKeyboardLeds=False
 bMainBtns=False
 bBtnStyle=False #?? bug #TODO    Could not parse stylesheet of object QPushButton(0x6f17de8, name = "n0_m1_move_to_cursor")
-bIDLE=False # to run from IDLE
+bIDLE=False #False True to run from IDLE
 #TODO:
 bDobot_to_Queue_internal=True # isQueued for internal dobot MCU SetPTPCmdEx(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0)
 bDobot_to_Queue_external=False #push to thread thread_m1_queue thread_magL_queue thread_magR_queue
@@ -15,7 +15,7 @@ bDobot_to_Queue_external=False #push to thread thread_m1_queue thread_magL_queue
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import (QApplication,QDialog, QMessageBox, QPushButton)
 from PySide2.QtCore import (QFile,QPoint,QPointF,QObject)
-from PySide2.QtGui import (QPen, QPainter)
+from PySide2.QtGui import (QPen, QPainter, QColor)
 from PySide2 import (QtGui,QtCore,QtWidgets)
 
 
@@ -40,11 +40,13 @@ api = dType.load()
 #===================================================================== Dobot start
 def doTask(que, k):
 	fitem = que.get()
-	keyboard.press(k)
-	keyboard.release(k)
+	if(bKeyboardLeds):
+		keyboard.press(k)
+		keyboard.release(k)
 	fitem()
-	keyboard.press(k)
-	keyboard.release(k)
+	if(bKeyboardLeds):
+		keyboard.press(k)
+		keyboard.release(k)
 	# func = items[0]
 	# args = items[1:]
 	# func(*args)
@@ -78,12 +80,9 @@ def thread_magR_f(  ) :
 		doTask(thread_magR_queue, Key.scroll_lock)
 
 #=================================== COM port
-
 id_m1=-2
 id_magL=-2
 id_magR=-2
-
-maxDobotConnectCount = 10
 errorString = ['Success','NotFound','Occupied']
 
 def checkBox_ConnectAll_click(state):
@@ -97,52 +96,39 @@ def connectDobots():
 	global id_m1
 	global id_magL
 	global id_magR
-	print("connecting all Dobots")
-	# print("Start search dobot, max:", maxDobotConnectCount)
-	# for i in range(0, maxDobotConnectCount):
-		# result = dType.ConnectDobot(api, "",115200)
-	id_m1 = connectCOM("COM3") #0
-	window.checkBox_M1.setChecked(id_m1!=-1)
-	window.label_M1_id.setText(str(id_m1)) #f'{10}'
-	if id_m1>-1:
-		dType.SetQueuedCmdClear(api,id_m1)
-		dType.SetQueuedCmdStartExec(api,id_m1)
-	
-	id_magL = connectCOM("COM4") #1
-	window.checkBox_MagL.setChecked(id_magL!=-1)
-	window.label_MagL_id.setText(str(id_magL))
 
-	if id_magL>-1:
-		dType.SetQueuedCmdClear(api,id_magL)
-		dType.SetQueuedCmdStartExec(api,id_magL)
+	id_m1=connectDobot("COM3", "m1", QColor(0,111,255,166), window.checkBox_M1, window.label_M1_id) #0   # QtCore.Qt.green QColor(0, 0, 255) Qt.darkYellow
+	id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id) #1
+	id_magR=connectDobot("COM16", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id)  #2 # rail connected
 	
-	id_magR = connectCOM("COM16") #2 # rail connected
-	window.checkBox_MagR.setChecked(id_magR!=-1)
-	window.label_MagR_id.setText(str(id_magR))
-	if id_magR>-1:
-		dType.SetQueuedCmdClear(api,id_magR)
-		dType.SetQueuedCmdStartExec(api,id_magR)
+
+def id_default(i):
+	switcher={
+			"m1":0,
+			"magL":1,
+			"magR":2
+		}
+	return switcher.get(i,2) #default 2
+		 
+def connectDobot(com_nm, id_nm, c, checkbox, label):
+	id_ = connectCOM(com_nm)  # 0
 	
-		# state = dType.ConnectDobot(self.DobotAPI, "", 115200)
-
-		# if state[0] != dType.DobotConnect.DobotConnect_NoError:
-			# raise ValueError("Failed to connect dobot. ", CON_STR[state[0]])
-
-		# dType.SetQueuedCmdClear(self.DobotAPI)
-		# dType.SetHOMEParams(self.DobotAPI, self.home_x, self.home_y, self.home_z, 0, isQueued=1)
-		
-		
-		#dType.SetHOMECmd(api, temp = 0, isQueued = 1)
-		
-	#initial id, for debug or create functions w.o robots
-	if(id_m1==-1):
-		id_m1=1
-	if(id_magL==-1): ########!! check
-		id_magL=2
-	if(id_magR==-1):
-		id_magR=3
-
+	checkbox.setChecked(id_ != -1)  # TODO mark red if fail connect COM
+	label.setText(str(id_))  # f'{10}'
 	
+	if id_ > -1:
+		dType.SetQueuedCmdClear(api, id_)
+		dType.SetQueuedCmdStartExec(api, id_)
+	
+	if(id_ == -1):
+		id_=id_default(id_nm) #initial id, for debug or create functions w.o robots
+	
+	# print(id_)
+
+	dobotStates[id_] = DobotState(id_nm, id_, c)
+	
+	return id_
+			
 def disconnectDobots():
 	global id_m1
 	global id_magL
@@ -431,7 +417,7 @@ QPushButton#config_button {
 		#img_elem.setScaledContents(True) #resize to label
 		#img_elem.resize(10,btn_order_.height())
 	
-	img_elem.setMask(pixmap.mask());
+	img_elem.setMask(pixmap.mask())
 	sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 	sizePolicy.setHeightForWidth(img_elem.sizePolicy().hasHeightForWidth())
 	img_elem.setSizePolicy(sizePolicy)
@@ -719,72 +705,60 @@ def queue_put(q, f): #TODO2 mark enqueued
 	if(not bStopEnqueue):
 		q.put(f)
 	
-
-
-
-
 	
 #=====================================================
-class DobotPos():
-	# now=[]
-	# target=[]
-	pos=[]
-	posCursor=[0,0,0]
+
+dobotStates=[None for i in range(9)]
+class DobotState():
+	pos=[0,0,0] #now
+	posCursor=[0,0,0] #target
+	IODI=[]
+	IOAI=[]
+	
 	_lock = threading.Lock()
-	def __init__(self):
-		self.pos=[]
-		print ("init")
-	# def setPos(t, n):
-		# self._lock.acquire()
-		# now=n
-		# target=t
-		# self._lock.release()
-	def setPosNow(self, n): #######################id
+	def __init__(self, nm, id_, c):
+		self.color=c
+		self.nm=nm
+		self.id_=id_
+		print ("init", nm, id_)
+		self.pos=[id_*30,0,0]
+		self.posCursor=[0,id_*30,0]
+
+	def setPosNow(self, n):
 		self._lock.acquire()
-		# now=n
-		# target=t
-		self.pos[0:4]=[n[0],n[1],n[2],n[3],n[4]]
+		#self.pos[0:4]=[n[0],n[1],n[2],n[3],n[4]]
+		self.pos=n
 		self._lock.release()
 		widgetDraw1.update()
-	def setPos(self, x,y,z,r,  n): #######################id
+	def setPos(self, x,y,z,r,  n):
 		self._lock.acquire()
-		# now=n
-		# target=t
-		self.pos=[n[0],n[1],n[2],n[3],n[4], x,y,z,r]
+		self.pos=n
+		self.posCursor=[x,y,z,r]
+		#self.pos=[n[0],n[1],n[2],n[3],n[4], x,y,z,r]
 		self._lock.release()
 		widgetDraw1.update()
-	def setPosCursorXY(self, x,y): #######################id
+	def setPosCursorXY(self, x,y):
 		self._lock.acquire()
-		# now=n
-		# target=t
 		self.posCursor[0]=x
 		self.posCursor[1]=y
 		self._lock.release()
 		widgetDraw1.update()
-	def setPosCursorZ(self, z): #######################id
+	def setPosCursorZ(self, z):
 		self._lock.acquire()
-		# now=n
-		# target=t
 		self.posCursor[2]=z
 		self._lock.release()
 		widgetDraw1.update()
-	def incrPosCursorZ(self, dz): #######################id
+	def incrPosCursorZ(self, dz):
 		self._lock.acquire()
-		# now=n
-		# target=t
 		self.posCursor[2]+=dz
 		self._lock.release()
 		widgetDraw1.update()
-		#print(self.posCursor[2])
 		
-	def getPos(self):
-		return self.pos
+	# def getPos(self):
+		# return self.pos
 		
 #=====================================================
-dobot_pos=DobotPos()
-
 from PySide2.QtCore import Qt
-
 
 class WidgetDraw1(QtWidgets.QWidget):
 	
@@ -803,51 +777,72 @@ class WidgetDraw1(QtWidgets.QWidget):
 		qp.begin(self)
 		qp.setRenderHint(QtGui.QPainter.Antialiasing, True)
 		
-		xywh=self.rect() 	#widget	#cent=self.geometry().center() #window
+		xywh=self.rect() 	#widget			#cent=self.geometry().center() #window
 		cent=xywh.center() 
 		self.cx=cent.x()
 		self.cy=cent.y()
-		#qp.drawLine(QPointF(0, 0), QPointF(50, 50));
-		#qp.drawLine(QPointF(0, 0), cent);
-		qp.drawLine(QPointF(0, self.cy), QPointF(xywh.width(), self.cy));
-		qp.drawLine(QPointF(self.cx, 0), QPointF(self.cx, xywh.height()));
+		qp.drawLine(QPointF(0, self.cy), QPointF(xywh.width(), self.cy))
+		qp.drawLine(QPointF(self.cx, 0), QPointF(self.cx, xywh.height()))
 		
 		self.drawPoints(qp)
 		
 		qp.end()
 	
 	def drawPoints(self, qp):
-		
-		qp.setPen(QtCore.Qt.red)
-		
-		pos=dobot_pos.getPos()
-		if(len(pos)>1):
-			#qp.setBrush(Qt.black)
-			self.draw1pos(qp, pos[0], pos[1], pos[2]) #now
-		if(len(pos)>7):
-			qp.setBrush(Qt.blue)
-			self.draw1pos(qp, pos[5], pos[6], pos[7]) #target	
-		
-		qp.setBrush(Qt.blue)
-		self.draw1pos(qp, dobot_pos.posCursor[0], dobot_pos.posCursor[1], dobot_pos.posCursor[2]) #cursor
-		
-	def draw1pos(self, qp, x, y, z):
+		for i in range(9):
+			dobotSt=dobotStates[i]
+			if(dobotSt == None):
+				continue
+			pos=dobotSt.pos
+			posCursor=dobotSt.posCursor
+			#print(i)
+			#print(pos)
+			if(len(pos)>2):
+				#qp.setBrush(Qt.black)
+				qp.setBrush(dobotSt.color)
+				#qp.setBrush(Qt.transparent)
+				qp.setPen(QPen(QtCore.Qt.red, 2))
+				self.draw1pos(qp, pos[0], pos[1], pos[2], dobotSt) #now
+			if(len(posCursor)>2):
+				qp.setPen(QPen(dobotSt.color, 2))
+				qp.setBrush(dobotSt.color)
+				
+				self.draw1pos(qp, posCursor[0], posCursor[1], posCursor[2], dobotSt, i == window.id_selected) #target	
+			
+
+	def draw1pos(self, qp, x, y, z, dobotSt, bMarkSelection=False):
 		xyz_str=str(round(x,1))+" "+str(round(y,1))+" "+str(round(z,1))
 		x+=self.cx
 		y+=self.cy
-		qp.setPen(QPen(Qt.red, 2));
-		qp.drawEllipse(QPoint(x-6,y-6),12,12) # draw https://doc.qt.io/qtforpython/PySide2/QtGui/QPainter.html#PySide2.QtGui.PySide2.QtGui.QPainter.drawEllipse
-);
+		
+		qp.drawLine(QPointF(x, y), QPointF(x, y-z*4))
+		
+		
+		#qp.setPen(QPen(Qt.red, 2))
+		qp.drawEllipse(QPoint(x,y),10,10) # draw https://doc.qt.io/qtforpython/PySide2/QtGui/QPainter.html#PySide2.QtGui.PySide2.QtGui.QPainter.drawEllipse
+		if(bMarkSelection):
+			qp.setBrush(Qt.transparent)
+			qp.drawEllipse(QPoint(x,y),16,16)
 
+		#xyz
 		font = QtGui.QFont("Segoe", 16)
 		font.setFixedPitch(True)
 		qp.setFont(font)
-		qp.drawText(x+12, y-6, xyz_str)
+		qp.drawText(x+14, y-7, xyz_str)
 		
-		# p.setPen(QPen(Qt.white, 3));
-		# p.drawLine(QPointF(410.738, 364.399), QPointF(-63151.2, -63197.6));
-		qp.setPen(QPen(Qt.cyan, 2));
-		qp.drawLine(QPointF(x-6, y-6), QPointF(x-6, y-6-z));
+		#nm
+		qp.setPen(QPen(QtCore.Qt.black, 1))
+		font = QtGui.QFont("Segoe", 8)
+		qp.setFont(font)
+		qp.drawText(x-2, y+4, dobotSt.nm[-1])
+		
+		
+		
+		
+		# p.setPen(QPen(Qt.white, 3))
+		# p.drawLine(QPointF(410.738, 364.399), QPointF(-63151.2, -63197.6))
+		#qp.setPen(QPen(Qt.cyan, 2))
+		
 		
 
 		# painter.setBrush(QtCore.Qt.blue)  # Set the circle color
@@ -870,20 +865,16 @@ class WidgetDraw1(QtWidgets.QWidget):
 	
 	def mousePressEvent(self, e):
 		points = e.pos()
-
-		dobot_pos.setPosCursorXY(points.x()-self.cx,points.y()-self.cy)
 		if(bDebug):
 			print("click at: ",points)
+		
+		if(dobotStates[window.id_selected] is not None):
+			dobotStates[window.id_selected].setPosCursorXY(points.x()-self.cx,points.y()-self.cy)
+
 		#self.update()
 	def wheelEvent(self, event):
-		# numDegrees = event.delta() / 8
-		# numSteps = numDegrees / 15
-		# if event->orientation() == Qt.Horizontal:
-			# scrollHorizontally(numSteps)
-		# else:
-			# scrollVertically(numSteps)
-		
-		dobot_pos.incrPosCursorZ(event.delta()/60)
+		if(dobotStates[window.id_selected] is not None):
+			dobotStates[window.id_selected].incrPosCursorZ(event.delta()/60)
 		event.accept()
 		#self.update()
 
@@ -894,8 +885,7 @@ if __name__ == "__main__":
 	exepath = os.path.dirname(sys.argv[0])+"\\"	 #path from lunch:  os.getcwd()+"\\"
 
 	app = QApplication(sys.argv)
-	
-	
+
 	
 	#dobot dll install			#nw permission
 	# dobotdllpathmust=os.path.join(os.path.dirname(sys.executable),"DobotDll.dll")
@@ -911,8 +901,8 @@ if __name__ == "__main__":
 	ui_file.close()
 	
 	dType.window=window #for monitor xyz
+	window.id_selected=0
 
-	window.dobot_pos=dobot_pos
 	window.checkBox_ConnectAll.stateChanged.connect(checkBox_ConnectAll_click)
 	connectDobots()
 	
@@ -951,6 +941,7 @@ if __name__ == "__main__":
 
 	global widgetDraw1
 	widgetDraw1 = WidgetDraw1()
+	window.widgetDraw1=widgetDraw1
 	#global btn_order_row2
 	window.QGridLayout_order.addWidget(widgetDraw1, btn_order_row2, 1, 1, 1)
 	btn_order_row2+=1
@@ -986,10 +977,12 @@ if __name__ == "__main__":
 	window.show()
 	class1.window=window
 	
-	if(bKeyboardLeds):
-		threading.Thread(target=keyhandler, args=(), daemon=True).start() #?is need daemon
+	
+	
+	
+	threading.Thread(target=keyhandler, args=(), daemon=True).start() #?is need daemon
 
-		
+
 	#robot tasks queues:
 	thread_m1 = threading.Thread(target=thread_m1_f) #,args=(result[3],)
 	thread_m1.setDaemon(True)

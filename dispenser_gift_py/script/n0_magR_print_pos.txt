@@ -1,0 +1,6 @@
+id = 'magR'
+nmFunction = 'n0_m1_move_to_cursor_relative'
+#print("dobot_pos: ",dobot_pos.pos)
+#dType.SetPTPCmdEx(api, id_magR, 7, 0,  10,  0, 0, 1)
+dType.printPosNow(api, id_magR, True) # it also dobot_pos.setPos
+#print("dobot_pos: ",dobot_pos.pos)

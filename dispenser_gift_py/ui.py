@@ -85,7 +85,12 @@ def on_release(key):
 	if key == KeyCode.from_char('p'):
 		pass
 	#print('{0} release'.format(key))
-	#print(key)
+
+	if(key.char.isdigit()):
+		id_selected=int(key.char) 
+		#print(id_selected)
+		class1.window.id_selected=id_selected #global nw here so sore in window
+		class1.window.widgetDraw1.update()
 	
 	if key == Key.f1:
 		#handleOpenDialog(class1.window)
