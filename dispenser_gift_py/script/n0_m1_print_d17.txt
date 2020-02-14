@@ -1,4 +1,3 @@
-id = 'magR'id_=id_m1
+id_=id_m1
 nmFunction = 'n0_m1_print_d17'
-
-print("d17: ", dType.GetIODI(api, id_, 17)[0]) # dType.GetIODI(api, id_, 17)[0]==1 or window.checkBox_IR_debug.isChecked()
+#print("d17: ")#d=dType.GetIODI(api, id_, 17)#print(d)print("d17: ", dType.GetIODI(api, id_, 17)[0]) # dType.GetIODI(api, id_, 17)[0]==1 or window.checkBox_IR_debug.isChecked()

@@ -1,3 +1,6 @@
+#TODO to not freeze while dobot disconnected add		if(dobotStates[dobotId] is not None):		before all "while(True)"
+#2f^ why return are arrays in most functions
+
 from ctypes import *
 import time,  platform, datetime
 
@@ -518,12 +521,14 @@ def DobotExec(api):
 
 def GetQueuedCmdCurrentIndex(api, dobotId):
 	queuedCmdIndex = c_uint64(0)
-	while(True):
-		result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
-		if result != DobotCommunicate.DobotCommunicate_NoError:
-			dSleep(2)
-			continue
-		break
+
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		while(True):
+			result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
+			if result != DobotCommunicate.DobotCommunicate_NoError:
+				dSleep(2)
+				continue
+			break
 	return [queuedCmdIndex.value]
 
 def SetQueuedCmdStartExec(api, dobotId):
@@ -676,23 +681,25 @@ def ResetPose(api, dobotId, manual, rearArmAngle, frontArmAngle):
 
 def GetPose(api, dobotId):
 	pose = Pose()
-	while(True):
-		result = api.GetPose(dobotId, byref(pose))
-		if result != DobotCommunicate.DobotCommunicate_NoError:
-			dSleep(5)
-			continue
-		break
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		while(True):
+			result = api.GetPose(dobotId, byref(pose))
+			if result != DobotCommunicate.DobotCommunicate_NoError:
+				dSleep(5)
+				continue
+			break
 	output('GetPose: %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f' %(pose.x,pose.y,pose.z,pose.rHead, pose.joint1Angle,pose.joint2Angle,pose.joint3Angle,pose.joint4Angle))
 	return [pose.x, pose.y, pose.z,pose.rHead, pose.joint1Angle, pose.joint2Angle, pose.joint3Angle, pose.joint4Angle]
 
 def GetPoseL(api, dobotId):
 	l = c_float(0)
-	while(True):
-		result = api.GetPoseL(dobotId, byref(l))
-		if result != DobotCommunicate.DobotCommunicate_NoError:
-			dSleep(5)
-			continue
-		break
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		while(True):
+			result = api.GetPoseL(dobotId, byref(l))
+			if result != DobotCommunicate.DobotCommunicate_NoError:
+				dSleep(5)
+				continue
+			break
 	return [l.value]
 
 def GetKinematics(api, dobotId):
@@ -745,22 +752,24 @@ def SetHOMEParams(api, dobotId,  x,  y,  z,  r,  isQueued=0):
 	param.z = z
 	param.r = r
 	queuedCmdIndex = c_uint64(0)
-	while(True):
-		result = api.SetHOMEParams(dobotId, byref(param),  isQueued, byref(queuedCmdIndex))
-		if result != DobotCommunicate.DobotCommunicate_NoError:
-			dSleep(5)
-			continue
-		break
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		while(True):
+			result = api.SetHOMEParams(dobotId, byref(param),  isQueued, byref(queuedCmdIndex))
+			if result != DobotCommunicate.DobotCommunicate_NoError:
+				dSleep(5)
+				continue
+			break
 	return [queuedCmdIndex.value]
 
 def GetHOMEParams(api, dobotId):
 	param = HOMEParams()
-	while(True):
-		result = api.GetHOMEParams(dobotId, byref(param))
-		if result != DobotCommunicate.DobotCommunicate_NoError:
-			dSleep(5)
-			continue
-		break
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		while(True):
+			result = api.GetHOMEParams(dobotId, byref(param))
+			if result != DobotCommunicate.DobotCommunicate_NoError:
+				dSleep(5)
+				continue
+			break
 	output('GetUserParams: %.4f' %(param.temp))
 	return [param.temp]
 
@@ -768,12 +777,13 @@ def SetHOMECmd(api, dobotId, temp, isQueued=0):
 	cmd = HOMECmd()
 	cmd.temp = temp
 	queuedCmdIndex = c_uint64(0)
-	while(True):
-		result = api.SetHOMECmd(dobotId, byref(cmd), isQueued, byref(queuedCmdIndex))
-		if result != DobotCommunicate.DobotCommunicate_NoError:
-			dSleep(5)
-			continue
-		break
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		while(True):
+			result = api.SetHOMECmd(dobotId, byref(cmd), isQueued, byref(queuedCmdIndex))
+			if result != DobotCommunicate.DobotCommunicate_NoError:
+				dSleep(5)
+				continue
+			break
 	return [queuedCmdIndex.value]
 def SetHOMECmd_mon(api, dobotId, temp, isQueued=0):
 	print("isQueued",isQueued)
@@ -1231,12 +1241,14 @@ def SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0):
 	cmd.z=z
 	cmd.rHead=rHead
 	queuedCmdIndex = c_uint64(0)
-	while(True):
-		result = api.SetPTPCmd(dobotId, byref(cmd), isQueued, byref(queuedCmdIndex))
-		if result != DobotCommunicate.DobotCommunicate_NoError:
-			dSleep(2)
-			continue
-		break
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn): #return if Dobot offline
+		while(True):
+			result = api.SetPTPCmd(dobotId, byref(cmd), isQueued, byref(queuedCmdIndex))
+			
+			if result != DobotCommunicate.DobotCommunicate_NoError:
+				dSleep(2)
+				continue
+			break
 	return [queuedCmdIndex.value]
 	
 def SetPTPWithLCmd(api, dobotId, ptpMode, x, y, z, rHead, l, isQueued=0):
@@ -1433,12 +1445,13 @@ def SetIODO(api, dobotId, address, level, isQueued=0):
 def GetIODO(api, dobotId,  addr):
 	param = IODO()
 	param.address = addr
-	while(True):
-		result = api.GetIODO(dobotId, byref(param))
-		if result != DobotCommunicate.DobotCommunicate_NoError:
-			dSleep(5)
-			continue
-		break
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		while(True):
+			result = api.GetIODO(dobotId, byref(param))
+			if result != DobotCommunicate.DobotCommunicate_NoError:
+				dSleep(5)
+				continue
+			break
 	output('GetIODO: address=%.4f level=%.4f' %(param.address,  param.level))
 	return [param.level]
 
@@ -1471,12 +1484,13 @@ def GetIOPWM(api, dobotId,  addr):
 def GetIODI(api, dobotId,  addr):
 	param = IODI()
 	param.address = addr
-	while(True):
-		result = api.GetIODI(dobotId, byref(param))
-		if result != DobotCommunicate.DobotCommunicate_NoError:
-			dSleep(5)
-			continue
-		break
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		while(True):
+			result = api.GetIODI(dobotId, byref(param))
+			if result != DobotCommunicate.DobotCommunicate_NoError:
+				dSleep(5)
+				continue
+			break
 	output('GetIODI: address=%d level=%d' %(param.address,  param.level))
 	return [param.level]
 	
@@ -1851,7 +1865,8 @@ def SetHOMECmdEx(api, dobotId,  temp,  isQueued=0):
 
 def printQueue_i(api,dobotId):
 	queuedCmdIndex = c_uint64(0)
-	result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
 	#print("queue_i, byref: %4s %4s"%( GetQueuedCmdCurrentIndex(api, dobotId)[0], queuedCmdIndex.value))
 	
 def SetHOMECmdEx_mon(api, dobotId,  temp,  isQueued=0): #TODO temp why need del
@@ -1945,6 +1960,7 @@ def SetPTPJumpParamsEx(api, dobotId, jumpHeight, maxJumpHeight, isQueued=0):
 		dSleep(5)
 		
 def SetPTPCmdEx(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0):
+	se_print_PosCursor(api, dobotId, x, y, z, rHead)
 	ret = SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued)
 	while(True):
 		printQueue_i(api,dobotId)
@@ -1956,29 +1972,26 @@ def SetPTPCmdEx_mon(api, dobotId, ptpMode, x, y, z, rHead, isQueued):
 	ret = SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued)
 	print(x, y, z)
 	while(True):
-		printPos(api, dobotId,x, y, z, rHead)
+		printPosNow(api, dobotId)
 		if ret[0] <= GetQueuedCmdCurrentIndex(api, dobotId)[0]:
 			break
 		dSleep(5)
-		#printPos(x, y, z, rHead)
+
 
 
 def printPosNow(api, dobotId, bPrint=False):
 	pos=GetPose(api, dobotId)
 	window.label_m1_pos_now.setText("now: %4s %4s %4s %4s"%(round(pos[0],1), round(pos[1],1), round(pos[2],1), round(pos[3],1)))
-	if(window.dobotStates[dobotId] is not None):
-		window.dobotStates[dobotId].setPosNow(pos) #TODO opt disableupd if run from printPos as it set all together
+	if(dobotStates[dobotId] is not None):
+		dobotStates[dobotId].setPosNow(pos) #TODO opt disableupd if run from printPos as it set all together
 	if(bPrint):
 		print("pos of %4s : %4s %4s %4s %4s" %( dobotId, pos[0], pos[1], pos[2], pos[3] ))
-	return pos
 
-def printPos(api, dobotId, x, y, z, rHead, bPrint=False): # TODO separate print targ , print now
+def se_print_PosCursor(api, dobotId, x, y, z, rHead, bPrint=False): # TODO separate print targ , print now
 	window.label_m1_pos_target.setText("target: %4s %4s %4s %4s"%(round(x,1), round(y,1), round(z,1), round(rHead,1))) # %4s %4d round(x,2) !!TODO
-	pos=printPosNow(api, dobotId, bPrint)
-	#if(window.dobotStates[dobotId] is not None):
-	#	window.dobotStates[dobotId].setPos(x,y,z,rHead, pos)
-	
-	return pos
+	if(dobotStates[dobotId] is not None):
+		dobotStates[dobotId].setPosCursorXYZ([x, y, z, rHead])
+
 
 
 	

@@ -6,7 +6,7 @@ bDebug=False # print
 
 bKeyboardLeds=False
 bMainBtns=False
-bBtnStyle=True #?? bug #TODO    Could not parse stylesheet of object QPushButton(0x6f17de8, name = "n0_m1_move_to_cursor")
+bBtnStyle=True
 bIDLE=False #False True to run from IDLE
 #TODO:
 bDobot_to_Queue_internal=True # isQueued for internal dobot MCU SetPTPCmdEx(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0)
@@ -117,6 +117,7 @@ def connectDobot(com_nm, id_nm, c, checkbox, label):
 	label.setText(str(id_))  # f'{10}'
 	
 	if id_ > -1:
+		dobotStates[id_].bOn=True
 		dType.SetQueuedCmdClear(api, id_)
 		dType.SetQueuedCmdStartExec(api, id_)
 	
@@ -154,7 +155,7 @@ bStopEnqueue=False
 
 tskMarks=[]
 def tskStart_mark(elem, id):
-	print(id)
+	#print("tskStart_mark id: ", id)
 	tskMarks.append(elem)
 	if(bBtnStyle):
 		if id==id_m1:
@@ -179,10 +180,13 @@ def tskWait_mark(elem, id):
 	pass
 	
 def tskEnd_mark(elem):
+	#print(elem.styleSheet())
+	time.sleep(0.001) #! bug without this delay random cause:  Could not parse stylesheet of object QPushButton(0x6f17de8, name = "my_btn_handler_function")
 	if(bBtnStyle):
 		elem.setStyleSheet("background-color: #aaff88") #green
 	elem.setEnabled(True)
 	QApplication.processEvents()
+
 def tskMarks_clear_all(bStopEnque):
 	global bStopEnqueue
 	bStopEnqueue=bStopEnque
@@ -452,7 +456,7 @@ def setIcon(elem, path):
 
 import pkgutil
 class funcToUIGen:
-	id=None
+	id_nm=None
 	
 	'''	----------------- load modules
 	@staticmethod
@@ -469,7 +473,7 @@ class funcToUIGen:
 	@classmethod
 	def initFromFile(cls, modul, window, module_name):
 		cls.modul = modul
-		return cls(modul.id, window, module_name, None)
+		return cls(modul.id_nm, window, module_name, None)
 	'''	
 	# ------------------ load string
 	@staticmethod
@@ -486,38 +490,39 @@ class funcToUIGen:
 				continue
 			N=fileNm_strArr[0][1] #TODO sort by N, inserting to layout
 
-			id=fileNm_strArr[1]
-			# id='id=id_'+fileNm_strArr[1]
+			id_nm=fileNm_strArr[1]
+			# id_exec='id=id_'+fileNm_strArr[1]
+			# exec(id_exec) #! TST
+			# print(id)
 			
 			if(bDebug):
 				print("read file nm")
 				print(fileNm_strArr)
 				print("nmFunction:"+nmFunction)
-			#print(stri)
-			# exec(id) #! TST
-			# print(id)
-			#funcToUIGen_x=funcToUIGen()
-			funcList.append( funcToUIGen.createFromFile(id, window, nmFunction, stri) )	
+
+			
+
+			funcList.append( funcToUIGen.createFromFile(id_nm, window, nmFunction, stri) )	
 	
 	@classmethod
-	def createFromFile(cls, id, window, nmFunction, stri):
-		cls.id = id
+	def createFromFile(cls, id_nm, window, nmFunction, stri):
+		cls.id_nm = id_nm
 		cls.window = window
 		cls.nmFunction = nmFunction
 		#cls.btn = cls.createBtn(cls)
 		cls.exec_str=stri
-		cls.btn = funcToUIGen.createBtn(nmFunction, id, stri)
+		cls.btn = funcToUIGen.createBtn(nmFunction, id_nm, stri)
 		cls.fn = funcToUIGen.createFunctionFromStr(nmFunction)
 		return cls()
 	
 	@classmethod
-	def createAndSave(cls, id, window, nmFunction, stri):
-		cls.id = id
+	def createAndSave(cls, id_nm, window, nmFunction, stri):
+		cls.id_nm = id_nm
 		cls.window = window
 		cls.nmFunction = nmFunction
 		cls.nmFile = nmFunction
 		#cls.btn = cls.createBtn(cls)
-		stri="id = '"+id+"'\r\nnmFunction = '"+cls.nmFile+"'\r\n"+stri
+		stri="id = '"+id_nm+"'\r\nnmFunction = '"+cls.nmFile+"'\r\n"+stri
 		cls.exec_str=stri	#"print('TODO exec_str')"
 		if(bDebug):
 			print("save file "+cls.nmFile)
@@ -547,14 +552,14 @@ class funcToUIGen:
 		# self.fn=fn
 		# fn()
 		 
-	def createBtn(nmFunction, id, stri):
+	def createBtn(nmFunction, id_nm, stri):
 
 		
 		#window.xx = QtWidgets.QPushButton(window.verticalLayout_debug_2)
 		btn = QtWidgets.QPushButton(window.verticalLayout_debug_2)
 		
 		btn.nmFunction = nmFunction
-		btn.id = id
+		btn.id_nm = id_nm
 		btn.exec_str=stri
 				
 		font = QtGui.QFont()
@@ -568,9 +573,9 @@ class funcToUIGen:
 			print("create btn: "+nmFunction)
 		btn.setObjectName(nmFunction)
 		btn.setText(nmFunction)
-		if id=="m1":
+		if id_nm=="m1":
 			parentElem=window.verticalLayout_m1
-		elif  id=="magL":
+		elif  id_nm=="magL":
 			parentElem=window.verticalLayout_magL
 		else:
 			parentElem=window.verticalLayout_magR
@@ -596,7 +601,7 @@ class funcToUIGen:
 
 		#btn=window.findChild(QtWidgets.QPushButton, self.nmFunction)
 
-		rID=btn.id
+		rID=btn.id_nm
 		tskStart_mark(btn, rID)
 		#if self.modul is None:
 		exec(btn.exec_str)
@@ -673,7 +678,8 @@ def check_clipboard_every2s():
 	#window.lineEdit_nm.setText(str_buf)
 	threading.Timer(3.0, check_clipboard_every2s).start()
 '''		
-posCurrent1=[]
+
+
 def btnHome_f(id_,btn):
 	tskMarks_clear_all(False)
 	tskStart_mark(btn, id_)
@@ -681,11 +687,10 @@ def btnHome_f(id_,btn):
 	dType.ClearAllAlarmsState(api, id_)
 	dType.SetQueuedCmdClear(api, id_)
 	
-	posCurrent1=dType.SetHOMECmdEx_mon(api, id_, 1,1)
+	dobotStates[id_].posHome=dType.SetHOMECmdEx_mon(api, id_, 1,1)
+
 	#dType.printPos(api, id_,0, 0, 0, 0, True)
-	print("end of home", posCurrent1)
 	tskEnd_mark(btn)
-	
 	
 def btnStop_f(id_, btn):
 	tskMarks_clear_all(True)
@@ -700,7 +705,6 @@ def queue_clear(q):
 	with q.mutex:
 		q.queue.clear()
 	
-	
 def queue_put(q, f): #TODO2 mark enqueued
 	#print("bStopEnqueue: ", bStopEnqueue)
 	if(not bStopEnqueue):
@@ -711,10 +715,12 @@ def queue_put(q, f): #TODO2 mark enqueued
 
 dobotStates=[None for i in range(9)]
 class DobotState():
-	pos=[0,0,0] #now
-	posCursor=[0,0,0] #target
+	pos=[0,0,0] #now, updates while exec "_mon" move function e.g.:  SetHOMECmdEx_mon
+	posCursor=[0,0,0] #target, updates on XY plot click or drom some functions that set target before exec move
+	posHome=[0,0,0] # updates after run btnHome_f
 	IODI=[]
 	IOAI=[]
+	bOn=False #Dobot online
 	
 	_lock = threading.Lock()
 	def __init__(self, nm, id_, c):
@@ -736,6 +742,11 @@ class DobotState():
 		self.pos=n
 		self.posCursor=[x,y,z,r]
 		#self.pos=[n[0],n[1],n[2],n[3],n[4], x,y,z,r]
+		self._lock.release()
+		widgetDraw1.update()
+	def setPosCursorXYZ(self, xyz_arr):
+		self._lock.acquire()
+		self.posCursor=xyz_arr
 		self._lock.release()
 		widgetDraw1.update()
 	def setPosCursorXY(self, x,y):
@@ -902,8 +913,8 @@ if __name__ == "__main__":
 	ui_file.close()
 	
 	dType.window=window #for monitor xyz
-	window.id_selected=0
-	window.dobotStates=dobotStates
+	window.id_selected=0 ###!! move to dType
+	dType.dobotStates=dobotStates
 
 	window.checkBox_ConnectAll.stateChanged.connect(checkBox_ConnectAll_click)
 	connectDobots()

@@ -1,3 +1,6 @@
+#file name: stage_column_name.txt
+#column in GUI can be: m1 | magL | magR
+
 time.sleep(1)
 print(str)
 print(nmFunction)

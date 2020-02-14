@@ -54,24 +54,26 @@ class M1_pos_at_pack:
 m1_pos_at_pack = M1_pos_at_pack()
 '''
 
+def f_nm():
+	import traceback
+	return traceback.extract_stack(None, 2)[0][2]
 
 m1_pos_at_pack=[180,  (-320),  30, (-111)]
 m1_pos_at_mag_site=[180,  (-180),  5, (-10)] #!! must move CCW
 m1_pos_at_pack_dx=-40
 m1_pos_at_pack_N=0;
 def t1_m1_pos_at_packet_h():
+	print(f_nm())
 	tskMarks_clear_all(False) #also clean queues
 	#thread_m1.join(); #TODO  or wait thread_m1_queue empty
-	
-	print("t1_m1_pos_at_packet_h")
 	
 	
 	queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
 def t1_m1_pos_at_packet_f():
-
+	print(f_nm())
 	btn=window.t1_m1_pos_at_packet
 	tskStart_mark(btn, id_m1)
-	print("t1_m1_pos_at_packet_f")
+
 	#print_state_m1(id_m1)
 	#dType.SetPTPCmdEx_mon(api, id_m1, 2, m1_pos_at_pack[0]+m1_pos_at_pack_dx*m1_pos_at_pack_N,  m1_pos_at_pack[1],  m1_pos_at_pack[2],  m1_pos_at_pack[3], 1)
 	#print_state_id(id_m1)
@@ -98,11 +100,13 @@ def t1_m1_pos_at_packet_f():
 
 
 def t2_m1_check_packet_h():
+	print(f_nm())
 	tskMarks_clear_all(False)
-	print("t2_m1_check_packet_h")
+
 	queue_put(thread_m1_queue, t2_m1_check_packet_f)
 
 def t2_m1_check_packet_f():
+	print(f_nm())
 	global m1_pos_at_pack_N
 	btn=window.t2_m1_check_packet
 	tskStart_mark(btn, id_m1)
@@ -120,19 +124,22 @@ def t2_m1_check_packet_f():
 	
 	tskEnd_mark(btn)
 def check_packet():
-	bPacketFound=dType.GetIODI(api, id_m1, 17)[0]==1 or window.checkBox_IR_debug.isChecked()
+	print(f_nm())
+	bPacketFound= (dType.GetIODI(api, id_m1, 17)[0]==1) or window.checkBox_IR_debug.isChecked()
 	print("check_packet IR sensor:", bPacketFound)
 	return bPacketFound
 	
 	
 def t3_m1_get_packet_h():
+	print(f_nm())
 	tskMarks_clear_all(False)
-	print("t3_m1_get_packet_h")	
+
 	queue_put(thread_m1_queue,t3_m1_get_packet_f)
 def t3_m1_get_packet_f():
+	print(f_nm())
 	btn=window.t3_m1_get_packet
 	tskStart_mark(btn, id_m1)
-	print("t3_m1_get_packet_f")
+
 	
 	dType.SetPTPCmdEx_mon(api, id_m1, 2, m1_pos_at_pack[0]+m1_pos_at_pack_dx*m1_pos_at_pack_N,  m1_pos_at_pack[1],  m1_pos_at_pack[2]+10,  m1_pos_at_pack[3]+30, 1)
 	print_state_id(id_m1)
@@ -146,9 +153,11 @@ def t3_m1_get_packet_f():
 	queue_put(thread_m1_queue,t4_m1_packet_to_mag_site_f)
 	
 def t4_m1_packet_to_mag_site_h():
+	print(f_nm())
 	tskMarks_clear_all(False)
 	queue_put(thread_m1_queue,t4_m1_packet_to_mag_site_f)
 def t4_m1_packet_to_mag_site_f():
+	print(f_nm())
 	btn=window.t4_m1_packet_to_mag_site
 	tskStart_mark(btn, id_m1)
 	
@@ -177,11 +186,13 @@ def t4_m1_packet_to_mag_site_f():
 
 	
 def t5_magL_wait_m1_h():
+	print(f_nm())
 	tskMarks_clear_all(False)
 	
 	queue_put(thread_magL_queue,t5_magL_wait_m1_f)
 	
 def t5_magL_wait_m1_f():
+	print(f_nm())
 	btn=window.t5_magL_wait_m1
 	
 	dType.SetPTPCmdEx_mon(api, id_magL, 2, pos_gift_get[0],  pos_gift_get[1],  pos_gift_get[2], pos_gift_get[3], 1)
@@ -203,14 +214,16 @@ pos_gift_get =[270,  53,  -58, 0]
 pos_gift_place =[238,  -177,  91, -1]
 	
 def t6_magL_give_and_back_h():
+	print(f_nm())
 	tskMarks_clear_all(False)
 	queue_put(thread_magL_queue,t6_magL_give_and_back_f)
 	
 def t6_magL_give_and_back_f(): #! re not back
+	print(f_nm())
 	btn=window.t6_magL_give_and_back
 	tskStart_mark(btn, id_m1)
 
-	print("t6_magL_give_and_back")
+
 	
 	dType.SetPTPCmdEx_mon(api, id_magL, 2, pos_gift_place[0],  pos_gift_place[1],  pos_gift_place[2], pos_gift_place[3], 1)
 	print_state_id(id_magL)

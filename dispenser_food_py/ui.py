@@ -85,7 +85,9 @@ def on_release(key):
 	if key == KeyCode.from_char('p'):
 		pass
 	#print('{0} release'.format(key))
-	#print(key)
+	print(key)
+	print(int(key.char))
+	id_sel=int(key.char)
 	
 	if key == Key.f1:
 		#handleOpenDialog(class1.window)
