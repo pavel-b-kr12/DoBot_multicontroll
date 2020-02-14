@@ -89,16 +89,19 @@ def on_release(key):
 		
 	if key == KeyCode.from_char('p'):
 		pass
-	#print('{0} release'.format(key))
+	try:
+		#print('{0} release'.format(key))
 
-	if(hasattr(key, 'char') and key.char.isdigit()):
-		id_selected=int(key.char)
-		if(id_selected==3):
-			id_selected=0
+		if(hasattr(key, 'char') and key.char.isdigit()):
+			id_selected=int(key.char)
+			if(id_selected==3):
+				id_selected=0
 		
-		#print(id_selected)
-		class1.window.id_selected=id_selected #global nw here so sore in window
-		class1.window.widgetDraw1.update()
+			#print(id_selected)
+			class1.window.id_selected=id_selected #global nw here so sore in window
+			class1.window.widgetDraw1.update()
+	except:
+		print("! key handler err")
 	
 	if key == Key.f1:
 		#handleOpenDialog(class1.window)

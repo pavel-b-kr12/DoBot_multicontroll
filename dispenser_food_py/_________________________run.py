@@ -1,5 +1,12 @@
 ﻿#F4 to toggle prog panel
 
+bDebug=False # print
+
+bKeyboardLeds=False
+bMainBtns=False
+bBtnStyle=True
+bIDLE=False #False True to run from IDLE
+
 # QPushButton
 # {
 # font-size:20px;
@@ -18,11 +25,13 @@
 
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import (QApplication,QDialog, QMessageBox, QPushButton)
-from PySide2.QtCore import (QFile,QPoint,QObject)
+from PySide2.QtCore import (QFile,QPoint,QPointF,QObject)
+from PySide2.QtGui import (QPen, QPainter, QColor)
 from PySide2 import (QtGui,QtCore,QtWidgets)
 
 
-import sys, threading,time, os
+
+import sys, threading,time, os, random
 import re
 from os.path import dirname, join, isdir, abspath, basename
 from threading import Timer
@@ -41,11 +50,13 @@ api = dType.load()
 #===================================================================== Dobot start
 def doTask(que, k):
 	fitem = que.get()
-	keyboard.press(k)
-	keyboard.release(k)
+	if(bKeyboardLeds):
+		keyboard.press(k)
+		keyboard.release(k)
 	fitem()
-	keyboard.press(k)
-	keyboard.release(k)
+	if(bKeyboardLeds):
+		keyboard.press(k)
+		keyboard.release(k)
 	# func = items[0]
 	# args = items[1:]
 	# func(*args)
@@ -78,16 +89,14 @@ def thread_magR_f(  ) :
 			continue
 		doTask(thread_magR_queue, Key.scroll_lock)
 
-#===================================
-
+#=================================== COM port
 id_m1=-2
 id_magL=-2
 id_magR=-2
-
-maxDobotConnectCount = 10
 errorString = ['Success','NotFound','Occupied']
 
 def checkBox_ConnectAll_click(state):
+	print("checkBox_ConnectAll_click: ",state)
 	if state == 2:
 		connectDobots()
 	else: #0
@@ -145,7 +154,8 @@ def disconnectDobots():
 
 def connectCOM(COMName):
 	result = dType.ConnectDobot(api, COMName,115200)
-	print("Connect : {}, err?: {}, id: {}".format(COMName, errorString[result[0]]!=0, result[3]))
+	if(bDebug):
+		print("Connect : {}, err?: {}, id: {}".format(COMName, errorString[result[0]], result[3]))
 	if result[0] == 0:
 		return result[3]
 	else:
@@ -297,7 +307,11 @@ def tskStart_mark(elem, id):
 	#window.update()
 	#elem.hide()
 def tskEnd_mark(elem):
-	elem.setStyleSheet("background-color: #aaff88")
+	#print(elem.styleSheet())
+	time.sleep(0.001) #! bug without this delay random cause:  Could not parse stylesheet of object QPushButton(0x6f17de8, name = "my_btn_handler_function")
+	if(bBtnStyle):
+		elem.setStyleSheet("background-color: #aaff88") #green
+	elem.setEnabled(True)
 	QApplication.processEvents()
 
 def resetProgressView():
@@ -401,18 +415,18 @@ QPushButton
 
 '''
 """
-       QPushButton {
-            margin: 1px;
-            border-color: #0c457e;
-            border-style: outset;
-            border-radius: 3px;
-            border-width: 1px;
-            color: black;
-            background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2198c0, stop: 1 #0d5ca6);
-        }
-        QPushButton:pressed {
-            background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #0d5ca6, stop: 1 #2198c0);
-        }"""
+	   QPushButton {
+			margin: 1px;
+			border-color: #0c457e;
+			border-style: outset;
+			border-radius: 3px;
+			border-width: 1px;
+			color: black;
+			background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2198c0, stop: 1 #0d5ca6);
+		}
+		QPushButton:pressed {
+			background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #0d5ca6, stop: 1 #2198c0);
+		}"""
 '''
 #===================================================================== generate GUI
 ffthread_nm_N=0
@@ -499,10 +513,10 @@ def gen_btn_order(nm, img):
 	btn_order_.setObjectName(nm)
 	''' name for css:
 QPushButton#exit_button {
-    border-image: url(resources/icons/64/exit.png);
+	border-image: url(resources/icons/64/exit.png);
 }
 QPushButton#config_button {
-    border-image: url(resources/icons/64/config.png);
+	border-image: url(resources/icons/64/config.png);
 }
 	'''
 	window.QGridLayout_order.addWidget(btn_order_, btn_order_row2, 1, 1, 1)
@@ -521,7 +535,7 @@ QPushButton#config_button {
 		#img_elem.setScaledContents(True) #resize to label
 		#img_elem.resize(10,btn_order_.height())
 	
-	img_elem.setMask(pixmap.mask());
+	img_elem.setMask(pixmap.mask())
 	sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 	sizePolicy.setHeightForWidth(img_elem.sizePolicy().hasHeightForWidth())
 	img_elem.setSizePolicy(sizePolicy)
@@ -556,7 +570,7 @@ def setIcon(elem, path):
 
 import pkgutil
 class funcToUIGen:
-	id=None
+	id_nm=None
 	
 	'''	----------------- load modules
 	@staticmethod
@@ -573,7 +587,7 @@ class funcToUIGen:
 	@classmethod
 	def initFromFile(cls, modul, window, module_name):
 		cls.modul = modul
-		return cls(modul.id, window, module_name, None)
+		return cls(modul.id_nm, window, module_name, None)
 	'''	
 	# ------------------ load string
 	@staticmethod
@@ -590,45 +604,50 @@ class funcToUIGen:
 				continue
 			N=fileNm_strArr[0][1] #TODO sort by N, inserting to layout
 
-			id=fileNm_strArr[1]
-			# id='id=id_'+fileNm_strArr[1]
-			print("read file nm")
-			print(fileNm_strArr)
-			print("nmFunction:"+nmFunction)
-			#print(stri)
-			# exec(id) #! TST
+			id_nm=fileNm_strArr[1]
+			# id_exec='id=id_'+fileNm_strArr[1]
+			# exec(id_exec) #! TST
 			# print(id)
-			#funcToUIGen_x=funcToUIGen()
-			funcList.append( funcToUIGen.createFromFile(id, window, nmFunction, stri) )	
+			
+			if(bDebug):
+				print("read file nm")
+				print(fileNm_strArr)
+				print("nmFunction:"+nmFunction)
+
+			
+
+			funcList.append( funcToUIGen.createFromFile(id_nm, window, nmFunction, stri) )	
 	
 	@classmethod
-	def createFromFile(cls, id, window, nmFunction, stri):
-		cls.id = id
+	def createFromFile(cls, id_nm, window, nmFunction, stri):
+		cls.id_nm = id_nm
 		cls.window = window
 		cls.nmFunction = nmFunction
 		#cls.btn = cls.createBtn(cls)
 		cls.exec_str=stri
-		cls.btn = funcToUIGen.createBtn(nmFunction, id, stri)
+		cls.btn = funcToUIGen.createBtn(nmFunction, id_nm, stri)
 		cls.fn = funcToUIGen.createFunctionFromStr(nmFunction)
 		return cls()
 	
 	@classmethod
-	def createAndSave(cls, id, window, nmFunction, stri):
-		cls.id = id
+	def createAndSave(cls, id_nm, window, nmFunction, stri):
+		cls.id_nm = id_nm
 		cls.window = window
 		cls.nmFunction = nmFunction
 		cls.nmFile = nmFunction
 		#cls.btn = cls.createBtn(cls)
-		stri="id = '"+id+"'\r\nnmFunction = '"+cls.nmFile+"'\r\n"+stri
+		stri="id = '"+id_nm+"'\r\nnmFunction = '"+cls.nmFile+"'\r\n"+stri
 		cls.exec_str=stri	#"print('TODO exec_str')"
-		print("save file "+cls.nmFile)
-		print(stri)
+		if(bDebug):
+			print("save file "+cls.nmFile)
+			print(stri)
 		with open(exepath+"script\\"+cls.nmFile+".txt", "w") as text_file:
 			text_file.write(stri)
 		return cls()
 		
 	def __init__(self):
-		print("init funcToUIGen")
+		if(bDebug):
+			print("init funcToUIGen")
 		#self.btn = self.createBtn()
 		#self.fn = self.createFunctionFromStr()
 		
@@ -637,24 +656,26 @@ class funcToUIGen:
 	def createFunctionFromStr(nmFunction):
 		exec_strf="global "+nmFunction+"\r\ndef "+nmFunction+"():\r\n" + '\t'.join(('\n'+funcToUIGen.exec_str.lstrip()).splitlines(True))
 		# exec_strf="def fn():\r\n" + '\t'.join(('\n'+self.exec_str.lstrip()).splitlines(True))
-		print("create f: "+exec_strf)
+		if(bDebug):
+			print("create f: "+exec_strf)
 		exec(exec_strf)
 		if nmFunction == 'functionNameAt0': #!tst
 			functionNameAt0()
-			print("?functionNameAt0?")
+			if(bDebug):
+				print("?functionNameAt0?")
 		# self.fn=fn
 		# fn()
 		 
-	def createBtn(nmFunction, id, stri):
+	def createBtn(nmFunction, id_nm, stri):
 
 		
 		#window.xx = QtWidgets.QPushButton(window.verticalLayout_debug_2)
 		btn = QtWidgets.QPushButton(window.verticalLayout_debug_2)
 		
 		btn.nmFunction = nmFunction
-		btn.id = id
+		btn.id_nm = id_nm
 		btn.exec_str=stri
-                
+		
 		font = QtGui.QFont()
 		font.setPointSize(12)
 		font.setWeight(50)
@@ -662,12 +683,13 @@ class funcToUIGen:
 		font.setBold(False)
 		btn.setFont(font)
 		btn.setStyleSheet("font: 12pt ;")
-		print("create btn: "+nmFunction)
+		if(bDebug):
+			print("create btn: "+nmFunction)
 		btn.setObjectName(nmFunction)
 		btn.setText(nmFunction)
-		if id=="m1":
+		if id_nm=="m1":
 			parentElem=window.verticalLayout_m1
-		elif  id=="magL":
+		elif  id_nm=="magL":
 			parentElem=window.verticalLayout_magL
 		else:
 			parentElem=window.verticalLayout_magR
@@ -681,17 +703,19 @@ class funcToUIGen:
 
 	#thread to not freeze GUI
 	def btnHandler(btn):
-		print("run btnHandler: "+btn.nmFunction)
+		if(bDebug):
+			print("run btnHandler: "+btn.nmFunction)
 		th = threading.Thread(target=funcToUIGen.btnThr, args=[btn], daemon=True) #?is need daemon
 		th.start()
 		
 	#wram worker function with UI signaling
 	def btnThr(btn):
-		print(btn.nmFunction)
+		if(bDebug):
+			print(btn.nmFunction)
 
 		#btn=window.findChild(QtWidgets.QPushButton, self.nmFunction)
 
-		rID=btn.id
+		rID=btn.id_nm
 		tskStart_mark(btn, rID)
 		#if self.modul is None:
 		exec(btn.exec_str)
@@ -703,7 +727,8 @@ class funcToUIGen:
 funcList = []
 import win32clipboard
 def convertClipboard(id):
-	print("convertClipboard id: "+id)
+	if(bDebug):
+		print("convertClipboard id: "+id)
 	N=window.spinBox_N.value()
 	window.spinBox_N.setValue(N+1)
 	nm=window.lineEdit_nm.text()
@@ -712,15 +737,15 @@ def convertClipboard(id):
 	#nmFile=str(N)+" "+id+" "+nm+str(N)
 	#nmBtn="btn"+nmFunction #? is need
 
-	global func_str
+	global str_buf
 	# get clipboard data
 	win32clipboard.OpenClipboard()
-	func_str = win32clipboard.GetClipboardData()
+	str_buf = win32clipboard.GetClipboardData()
 	win32clipboard.CloseClipboard()
 	'''	
-	#print(   '\t'.join(func_str.splitlines(True)))
-	#print(   '\t'.join(('\n'+func_str.lstrip()).splitlines(True)))
-	#func_str='\t'.join(('\n'+func_str.lstrip()).splitlines(True))
+	#print(   '\t'.join(str_buf.splitlines(True)))
+	#print(   '\t'.join(('\n'+str_buf.lstrip()).splitlines(True)))
+	#str_buf='\t'.join(('\n'+str_buf.lstrip()).splitlines(True))
 	'''
 	
 	'''
@@ -730,31 +755,41 @@ def convertClipboard(id):
 	win32clipboard.CloseClipboard()
 	'''
 
-	func_str = re.sub(r"exec_str(.*?\r\n)", r"\1 xxx %s" % 1, func_str)
-	func_str = re.sub(r"(nc_str\)\r\n)", r"%s" % 1, func_str)
+	#str_buf = re.sub(r"exec_str(.*?\r\n)", r"\1 xxx %s" % 1, str_buf)
+	#str_buf = re.sub(r"(nc_str\)\r\n)", r"%s" % 1, str_buf)
 	
+	str_buf = re.sub(r"SetQueuedCmdClear\(api\,", r"SetQueuedCmdClear(api, %s" % id, str_buf)
+	str_buf = re.sub(r"SetHOMECmdEx\(api, 1\)", r"SetHOMECmdEx(api, %s, 1)" % id, str_buf)
+	str_buf = re.sub(r"SetQueuedCmdForceStopExec(api)\(api, 1\)", r"SetQueuedCmdForceStopExec(api, %s)" % id, str_buf)
+	str_buf = re.sub(r"GetPoseEx\(api\)", r"GetPoseEx(api, %s)" % id, str_buf)
+	str_buf = re.sub(r"GetPose\(api\)", r"GetPose(api, %s)" % id, str_buf)
+	str_buf = re.sub(r"SetPTPCmdEx\(api\,", r"SetPTPCmdEx(api, %s" % id, str_buf) #not exactly match
+	str_buf = re.sub(r"GetIODI\(api\,", r"GetIODI(api, %s" % id, str_buf) #not exactly match
+	str_buf = re.sub(r"SetHOMECmdEx\(api\,", r"SetHOMECmdEx(api, %s" % id, str_buf) #not exactly match
+	
+
 	
 	global exec_str
 	exec_str="global "+nmFunction+"\r\n"
-	exec_str+="def "+nmFunction+"():"+func_str
+	exec_str+="def "+nmFunction+"():"+str_buf
 	exec(exec_str)
-	newBtn=funcToUIGen.createBtn(nmFunction, id, func_str)
+	newBtn=funcToUIGen.createBtn(nmFunction, id, str_buf)
 	newBtn.clicked.connect(globals()[nmFunction])
 	
 	print(exec_str,  file=open(nmFunction+".py", 'w'))
 	#with open(nmFunction+".py", "w") as text_file:
-	#    text_file.write(exec_str)
+	#	text_file.write(exec_str)
 	
 
 	
 
 
-	funcList.append( funcToUIGen.createAndSave(id, window, nmFunction, func_str) )
+	funcList.append( funcToUIGen.createAndSave(id, window, nmFunction, str_buf) )
 '''
 def check_clipboard_every2s():
 	#convertClipboard('1')
 	#window.textEdit_in.setText(str_buf)
-	#window.lineEdit_nm.setText(func_str)
+	#window.lineEdit_nm.setText(str_buf)
 	threading.Timer(3.0, check_clipboard_every2s).start()
 '''		
 	
@@ -766,6 +801,7 @@ if __name__ == "__main__":
 	exepath = os.path.dirname(sys.argv[0])+"\\"	 #path from lunch:  os.getcwd()+"\\"
 
 	app = QApplication(sys.argv)
+
 	
 	#dobot dll install			#nw permission
 	# dobotdllpathmust=os.path.join(os.path.dirname(sys.executable),"DobotDll.dll")
@@ -782,7 +818,7 @@ if __name__ == "__main__":
 
 
 	window.checkBox_ConnectAll.stateChanged.connect(checkBox_ConnectAll_click)
-	#connectDobots()
+	connectDobots()
 	
 
 	btn_fill_bg=window.btn_fill10.styleSheet()
@@ -824,7 +860,7 @@ if __name__ == "__main__":
 	
 	threading.Thread(target=keyhandler, args=(), daemon=True).start() #?is need daemon
 
-		
+
 	#robot tasks queues:
 	thread_m1 = threading.Thread(target=thread_m1_f) #,args=(result[3],)
 	thread_m1.setDaemon(True)
@@ -844,11 +880,11 @@ if __name__ == "__main__":
 		# shadow = QtWidgets.QGraphicsDropShadowEffect(blurRadius=5, xOffset=3, yOffset=3)
 		# window.setGraphicsEffect(shadow)
 
-
-	#dType.DobotExec(api)
-	
-	#check_clipboard_every2s()
-	if len(sys.argv) > 0: # run from .bat .sh
-		sys.exit(app.exec_()) # otherwise only work when running fron IDLE for debug
+	if(not bIDLE):
+		dType.DobotExec(api)
+		
+		#check_clipboard_every2s()
+		if len(sys.argv) > 0: # run from .bat .sh
+			sys.exit(app.exec_()) # otherwise only work when running fron IDLE for debug
 
 

@@ -116,8 +116,9 @@ def connectDobot(com_nm, id_nm, c, checkbox, label):
 	checkbox.setChecked(id_ != -1)  # TODO mark red if fail connect COM
 	label.setText(str(id_))  # f'{10}'
 	
+	onNow=False
 	if id_ > -1:
-		dobotStates[id_].bOn=True
+		onNow=True
 		dType.SetQueuedCmdClear(api, id_)
 		dType.SetQueuedCmdStartExec(api, id_)
 	
@@ -127,6 +128,7 @@ def connectDobot(com_nm, id_nm, c, checkbox, label):
 	# print(id_)
 
 	dobotStates[id_] = DobotState(id_nm, id_, c)
+	dobotStates[id_].bOn=onNow
 	
 	return id_
 			
@@ -561,7 +563,7 @@ class funcToUIGen:
 		btn.nmFunction = nmFunction
 		btn.id_nm = id_nm
 		btn.exec_str=stri
-				
+		
 		font = QtGui.QFont()
 		font.setPointSize(12)
 		font.setWeight(50)
