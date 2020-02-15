@@ -691,7 +691,7 @@ def GetPose(api, dobotId):
 				dSleep(5)
 				continue
 			break
-	output('GetPose: %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f' %(pose.x,pose.y,pose.z,pose.rHead, pose.joint1Angle,pose.joint2Angle,pose.joint3Angle,pose.joint4Angle))
+	#output('GetPose: %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f' %(pose.x,pose.y,pose.z,pose.rHead, pose.joint1Angle,pose.joint2Angle,pose.joint3Angle,pose.joint4Angle))
 	return [pose.x, pose.y, pose.z,pose.rHead, pose.joint1Angle, pose.joint2Angle, pose.joint3Angle, pose.joint4Angle]
 
 def GetPoseL(api, dobotId):
@@ -1984,7 +1984,7 @@ def SetPTPCmdEx_mon(api, dobotId, ptpMode, x, y, z, rHead, isQueued):
 	rHead=pos[3]
 	print_PosCursor(api, dobotId, x, y, z, rHead)
 	ret = SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued)
-	print(x, y, z)
+	#print(x, y, z)
 	while(True):
 		printPosNow(api, dobotId)
 		if ret[0] <= GetQueuedCmdCurrentIndex(api, dobotId)[0]:
@@ -1999,7 +1999,7 @@ def printPosNow(api, dobotId, bPrint=False): # TODO move to GetPose
 	if(dobotStates[dobotId] is not None):
 		dobotStates[dobotId].setPosNow(pos) #TODO opt disableupd if run from printPos as it set all together
 	if(bPrint):
-		print("pos of %4s : %4s %4s %4s %4s" %( dobotId, pos[0], pos[1], pos[2], pos[3] ))
+		print("pos of %4s : %4s %4s %4s %4s" %( dobotId, pos[0], pos[1], pos[2], pos[3] ), end="")
 
 def print_PosCursor(api, dobotId, x, y, z, rHead, bPrint=False): # TODO separate print targ , print now
 	if(bPrint):

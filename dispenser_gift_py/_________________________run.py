@@ -2,6 +2,11 @@
 
 #int ClearAllAlarmsState(api, id_)
 
+from __future__ import print_function
+#import fixpath
+from colorama import init as initcolorama, Fore, Back, Style
+initcolorama()
+
 bDebug=False # print
 
 bKeyboardLeds=False
@@ -1039,7 +1044,7 @@ if __name__ == "__main__":
 
 	if(not bIDLE):
 		dType.DobotExec(api)
-		
+		#!!
 		#check_clipboard_every2s()
 		if len(sys.argv) > 0: # run from .bat .sh
 			sys.exit(app.exec_()) # otherwise only work when running fron IDLE for debug

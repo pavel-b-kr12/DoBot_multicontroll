@@ -79,14 +79,14 @@ def t0_magR_rail_Home_f():
 def t01_m1_find_pivot():
 	print(f_nm())
 	tskMarks_clear_all(False)
-	queue_put(thread_magR_queue, t0_magR_rail_Home_f)
+	queue_put(thread_magR_queue, t01_m1_find_pivot_f)
 def t01_m1_find_pivot_f():
 	print(f_nm())
 	btn=window.t01_m1_find_pivot
 	tskStart_mark(btn, id_magR)
 	
 	while(True):
-		dType.SetPTPCmdEx_mon(api, id_m1, MOV_Relative, None, None, None, 1, 1)# move a bit r-axis
+		#dType.SetPTPCmdEx_mon(api, id_m1, MOV_Relative, None, None, None, 1, 1)# move a bit r-axis
 	
 		if(check_packet()): # check sensor
 			break
@@ -162,7 +162,14 @@ def t2_m1_check_packet_f():
 	tskEnd_mark(btn)
 def check_packet():
 	bPacketFound= (dType.GetIODI(api, id_m1, 17)[0]==1) or window.checkBox_IR_debug.isChecked()
-	print("check_packet IR sensor:", bPacketFound)
+	#print("check_packet IR sensor:", bPacketFound, " ", end="") #!?? nw in thread
+	dType.printPosNow(api, id_m1, bPrint=True)
+	if(bPacketFound):
+		masgPacket=Fore.GREEN+"Yes"+Fore.RESET
+	else:
+		masgPacket=Fore.RED+"No"+Fore.RESET
+	sys.stdout.write("  check_packet IR sensor: %s   \r" % (masgPacket) )
+	sys.stdout.flush()
 	return bPacketFound
 	
 	
