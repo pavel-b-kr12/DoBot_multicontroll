@@ -160,14 +160,14 @@ def t2_m1_check_packet_f():
 		time.sleep(2) ####
 	
 	tskEnd_mark(btn)
+	
+
+	
 def check_packet():
 	bPacketFound= (dType.GetIODI(api, id_m1, 17)[0]==1) or window.checkBox_IR_debug.isChecked()
 	#print("check_packet IR sensor:", bPacketFound, " ", end="") #!?? nw in thread
 	dType.printPosNow(api, id_m1, bPrint=True)
-	if(bPacketFound):
-		masgPacket=Fore.GREEN+"Yes"+Fore.RESET
-	else:
-		masgPacket=Fore.RED+"No"+Fore.RESET
+	masgPacket=printColorizeStr("",bPacketFound, ["No","Yes"])
 	sys.stdout.write("  check_packet IR sensor: %s   \r" % (masgPacket) )
 	sys.stdout.flush()
 	return bPacketFound

@@ -507,7 +507,7 @@ def ConnectDobot(api, portName, baudrate):
 	fwType = create_string_buffer(100)
 	version = create_string_buffer(100)
 	dobotId = c_int(0)
-	result = api.ConnectDobot(szPara,  baudrate,  fwType,  version, byref(dobotId))
+	result = api.ConnectDobot(szPara,  baudrate,  fwType,  version, byref(dobotId)) #this print
 	return [result,  fwType.value.decode("utf-8"),  version.value.decode("utf-8"), dobotId.value]
 
 def DisconnectDobot(api, dobotId):

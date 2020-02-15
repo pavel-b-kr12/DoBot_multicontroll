@@ -2,10 +2,8 @@
 
 #int ClearAllAlarmsState(api, id_)
 
-from __future__ import print_function
-#import fixpath
-from colorama import init as initcolorama, Fore, Back, Style
-initcolorama()
+from ui_print import *
+		
 
 bDebug=False # print
 
@@ -131,11 +129,9 @@ def connectDobot(com_nm, id_nm, c, checkbox, label):
 	if(id_ == -1):
 		id_=id_default(id_nm) #initial id, for debug or create functions w.o robots
 	
-	# print(id_)
-
 	dobotStates[id_] = DobotState(id_nm, id_, c)
 	dobotStates[id_].bOn=onNow
-	
+
 	return id_
 			
 def disconnectDobots():
@@ -151,6 +147,7 @@ def disconnectDobots():
 
 def connectCOM(COMName):
 	result = dType.ConnectDobot(api, COMName,115200)
+
 	if(bDebug):
 		print("Connect : {}, err?: {}, id: {}".format(COMName, errorString[result[0]], result[3]))
 	if result[0] == 0:
@@ -742,7 +739,8 @@ class DobotState():
 		self.color=c
 		self.nm=nm
 		self.id_=id_
-		print ("init", nm, id_)
+		if(bDebug):
+			print ("init", nm, id_)
 		self.pos=[id_*30,0,0]
 		self.posCursor=[0,id_*30,0]
 

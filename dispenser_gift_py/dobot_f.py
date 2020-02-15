@@ -128,10 +128,13 @@ def btn_rail_down_h():
 #================================================================================ IO
 
 def getAll_In_draw():
-
 	print("input for id %4s d:"%(window.id_selected))
 	for i in range(11, 19):
-		print(i, ": ", dType.GetIODI(api, window.id_selected,  i)[0])	#GetIODO(api, dobotId,  addr)
+		b=dType.GetIODI(api, window.id_selected,  i)[0] #GetIODO(api, dobotId,  addr)
+		s=printColorizeStr(" "+str(i),b,["-","+"], [Fore.CYAN,Fore.GREEN])
+		sys.stdout.write(s)
+		#sys.stdout.flush()
+	print()
 	#print("input a:")
 	#for i in range(0, 5):
 	#	print(i, ": ", dType.GetIOADC(api, id_m1,  i)[0])
