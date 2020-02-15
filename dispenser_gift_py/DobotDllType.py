@@ -1,4 +1,4 @@
-#TODO to not freeze while dobot disconnected add		if(dobotStates[dobotId] is not None):		before all "while(True)"
+#TODO to not freeze while dobot disconnected add		if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):		before all "while(True)"  !!! while(bDobotCanOperate())
 #2f^ why return are arrays in most functions
 
 from ctypes import *
@@ -572,7 +572,10 @@ def SetQueuedCmdStopDownload(api, dobotId):
 		break
 	
 def SetQueuedCmdClear(api, dobotId):
-	return [api.SetQueuedCmdClear(dobotId)]
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		return [api.SetQueuedCmdClear(dobotId)]
+	else:
+		return 0
 
 def SetDeviceSN(api, dobotId, str): 
 	szPara = create_string_buffer(25)
@@ -727,12 +730,13 @@ def GetAlarmsState(api, dobotId,  maxLen=1000):
 	return [alarmsState.raw, len.value]
 	
 def ClearAllAlarmsState(api, dobotId):
-	while(True):
-		result = api.ClearAllAlarmsState(dobotId)
-		if result != DobotCommunicate.DobotCommunicate_NoError:
-			dSleep(5)
-			continue
-		break
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		while(True):
+			result = api.ClearAllAlarmsState(dobotId)
+			if result != DobotCommunicate.DobotCommunicate_NoError:
+				dSleep(5)
+				continue
+			break
 
 def GetUserParams(api, dobotId):
 	param = UserParams()
@@ -790,19 +794,12 @@ def SetHOMECmd_mon(api, dobotId, temp, isQueued=0):
 	cmd = HOMECmd()
 	cmd.temp = temp
 	queuedCmdIndex = c_uint64(0)
-	#print("SetHOMECmd_mon")
 	while(True):
-		#print("SetHOMECmd_mon1")
-		#printPos(api, dobotId,0, 0, 0, 0)
-		
 		result = api.SetHOMECmd(dobotId, byref(cmd), isQueued, byref(queuedCmdIndex))
-		print("SetHOMECmd_mon queuedCmdIndex", queuedCmdIndex, queuedCmdIndex.value)
-		#print(result) #NoError=0
 		if result != DobotCommunicate.DobotCommunicate_NoError:
 			dSleep(5)
 			continue
-		#print("SetHOMECmd_mon9")
-		#printPos(api, dobotId,0, 0, 0, 0)
+		#printPosNow(api, dobotId)
 		break
 	return [queuedCmdIndex.value]
 	
@@ -1854,14 +1851,15 @@ def GetPoseEx(api, dobotId,  index):
 	return round(pos[index-1],  4)
 	
 def SetHOMECmdEx(api, dobotId,  temp,  isQueued=0):
-	ret = SetHOMECmd(api, dobotId, temp,  isQueued)
-	queuedCmdIndex = c_uint64(0)
-	while(True):
-		result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
-		if result == DobotCommunicate.DobotCommunicate_NoError and ret[0] <= queuedCmdIndex.value:
-			break
-		#If the delay is too short, you cannot disconnect after pressing the reset key
-		dSleep(100)	
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		ret = SetHOMECmd(api, dobotId, temp,  isQueued)
+		queuedCmdIndex = c_uint64(0)
+		while(True):
+			result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
+			if result == DobotCommunicate.DobotCommunicate_NoError and ret[0] <= queuedCmdIndex.value:
+				break
+			#If the delay is too short, you cannot disconnect after pressing the reset key
+			dSleep(100)	
 
 def printQueue_i(api,dobotId):
 	queuedCmdIndex = c_uint64(0)
@@ -1870,47 +1868,41 @@ def printQueue_i(api,dobotId):
 	#print("queue_i, byref: %4s %4s"%( GetQueuedCmdCurrentIndex(api, dobotId)[0], queuedCmdIndex.value))
 	
 def SetHOMECmdEx_mon(api, dobotId,  temp,  isQueued=0): #TODO temp why need del
-	print(1)
-	#printQueue_i(api,dobotId)
-	#SetPTPCmdEx(api, dobotId, 7, 0,  10,  0, 0, 1)
-	#printQueue_i(api,dobotId)
-	print(2)
-	
-	queuedCmdIndex = c_uint64(0)
-	result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
-	queuedCmdIndex0=queuedCmdIndex.value
-	
-	printQueue_i(api,dobotId)
-	
-	ret = SetHOMECmd_mon(api, dobotId, temp,  isQueued)
-	
-	print("home index",ret[0])
-
-	while(True):
+	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn):
+		queuedCmdIndex = c_uint64(0)
 		result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
+		queuedCmdIndex0=queuedCmdIndex.value
 		
 		printQueue_i(api,dobotId)
-		if result == DobotCommunicate.DobotCommunicate_NoError and ret[0] <= queuedCmdIndex.value:
-			break
-		#If the delay is too short, you cannot disconnect after pressing the reset key
-		dSleep(100)
-		printPosNow(api, dobotId)
+		
+		ret = SetHOMECmd_mon(api, dobotId, temp,  isQueued)
+		
+		print("home index",ret[0])
 
-	'''
-	i=0
-	while(True):
-		print("queue_i", GetQueuedCmdCurrentIndex(api, dobotId)[0])
-		
-		#if ret[0] <= GetQueuedCmdCurrentIndex(api, dobotId)[0]:
-		#	break
-		dSleep(200)
-		
-		printPos(api, dobotId,0, 0, 0, 0, True)
-		i+=1
-		print(i)
-	'''
-	pos=printPos(api, dobotId,0, 0, 0, 0)
-	return pos
+		while(True):
+			result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
+			
+			#printQueue_i(api,dobotId)
+			if result == DobotCommunicate.DobotCommunicate_NoError and ret[0] <= queuedCmdIndex.value:
+				break
+			#If the delay is too short, you cannot disconnect after pressing the reset key
+			dSleep(100)
+			printPosNow(api, dobotId)
+
+		'''
+		i=0
+		while(True):
+			print("queue_i", GetQueuedCmdCurrentIndex(api, dobotId)[0])
+			
+			#if ret[0] <= GetQueuedCmdCurrentIndex(api, dobotId)[0]:
+			#	break
+			dSleep(200)
+			
+			printPosNow(api, dobotId)
+			i+=1
+			print(i)
+		'''
+
 		
 def SetWAITCmdEx(api, dobotId, waitTime, isQueued=0):
 	#ret = SetWAITCmd(api, dobotId, waitTime, isQueued)
@@ -1958,9 +1950,25 @@ def SetPTPJumpParamsEx(api, dobotId, jumpHeight, maxJumpHeight, isQueued=0):
 		if ret[0] <= GetQueuedCmdCurrentIndex(api, dobotId)[0]:
 			break
 		dSleep(5)
-		
+
+def NoneToCurrent(api, dobotId, pos):
+	if(pos[0] is None or pos[1] is None or pos[2] is None or pos[3] is None): #TODO use
+		pos_now = GetPose(api, dobotId)
+		if(pos[0] is None):
+			pos[0]=pos_now[0]
+		if(pos[1] is None):
+			pos[1]=pos_now[1]
+		if(pos[2] is None):
+			pos[2]=pos_now[2]
+		if(pos[3] is None):
+			pos[3]=pos_now[3]
+	return pos
+
+
+#x, y, z, rHead  can be None to use current
 def SetPTPCmdEx(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0):
-	se_print_PosCursor(api, dobotId, x, y, z, rHead)
+	NoneToCurrent(api, dobotId, [x, y, z, rHead])
+	print_PosCursor(api, dobotId, x, y, z, rHead)
 	ret = SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued)
 	while(True):
 		printQueue_i(api,dobotId)
@@ -1969,6 +1977,12 @@ def SetPTPCmdEx(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0):
 		dSleep(5)
 		
 def SetPTPCmdEx_mon(api, dobotId, ptpMode, x, y, z, rHead, isQueued):
+	pos=NoneToCurrent(api, dobotId, [x, y, z, rHead])
+	x=pos[0]
+	y=pos[1]
+	z=pos[2]
+	rHead=pos[3]
+	print_PosCursor(api, dobotId, x, y, z, rHead)
 	ret = SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued)
 	print(x, y, z)
 	while(True):
@@ -1979,7 +1993,7 @@ def SetPTPCmdEx_mon(api, dobotId, ptpMode, x, y, z, rHead, isQueued):
 
 
 
-def printPosNow(api, dobotId, bPrint=False):
+def printPosNow(api, dobotId, bPrint=False): # TODO move to GetPose
 	pos=GetPose(api, dobotId)
 	window.label_m1_pos_now.setText("now: %4s %4s %4s %4s"%(round(pos[0],1), round(pos[1],1), round(pos[2],1), round(pos[3],1)))
 	if(dobotStates[dobotId] is not None):
@@ -1987,8 +2001,9 @@ def printPosNow(api, dobotId, bPrint=False):
 	if(bPrint):
 		print("pos of %4s : %4s %4s %4s %4s" %( dobotId, pos[0], pos[1], pos[2], pos[3] ))
 
-def se_print_PosCursor(api, dobotId, x, y, z, rHead, bPrint=False): # TODO separate print targ , print now
-	window.label_m1_pos_target.setText("target: %4s %4s %4s %4s"%(round(x,1), round(y,1), round(z,1), round(rHead,1))) # %4s %4d round(x,2) !!TODO
+def print_PosCursor(api, dobotId, x, y, z, rHead, bPrint=False): # TODO separate print targ , print now
+	if(bPrint):
+		window.label_m1_pos_target.setText("target: %4s %4s %4s %4s"%(round(x,1), round(y,1), round(z,1), round(rHead,1))) # %4s %4d round(x,2) !!TODO
 	if(dobotStates[dobotId] is not None):
 		dobotStates[dobotId].setPosCursorXYZ([x, y, z, rHead])
 

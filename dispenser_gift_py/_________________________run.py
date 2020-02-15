@@ -6,6 +6,7 @@ bDebug=False # print
 
 bKeyboardLeds=False
 bMainBtns=False
+xy_scale=0.94 #plot pos
 bBtnStyle=True
 bIDLE=False #False True to run from IDLE
 #TODO:
@@ -159,10 +160,11 @@ tskMarks=[]
 def tskStart_mark(elem, id):
 	#print("tskStart_mark id: ", id)
 	tskMarks.append(elem)
+	
 	if(bBtnStyle):
+		time.sleep(0.001)
 		if id==id_m1:
 			elem.setStyleSheet("background-color: #ffffaa") #yellow rgb(255,255,55) 
-			#@@ https://stackoverflow.com/questions/32313469/stylesheet-in-pyside-not-working https://stackoverflow.com/questions/20908370/styling-with-classes-in-pyside-python
 		if id==id_magL:
 			elem.setStyleSheet("background-color: #eeffaa")
 		if id==id_magR:
@@ -183,8 +185,10 @@ def tskWait_mark(elem, id):
 	
 def tskEnd_mark(elem):
 	#print(elem.styleSheet())
-	time.sleep(0.001) #! bug without this delay random cause:  Could not parse stylesheet of object QPushButton(0x6f17de8, name = "my_btn_handler_function")
+	
 	if(bBtnStyle):
+		time.sleep(0.001) #! bug without this delay random cause:  Could not parse stylesheet of object QPushButton(0x6f17de8, name = "my_btn_handler_function")
+		#@ https://stackoverflow.com/questions/32313469/stylesheet-in-pyside-not-working https://stackoverflow.com/questions/20908370/styling-with-classes-in-pyside-python
 		elem.setStyleSheet("background-color: #aaff88") #green
 	elem.setEnabled(True)
 	QApplication.processEvents()
@@ -683,16 +687,19 @@ def check_clipboard_every2s():
 
 
 def btnHome_f(id_,btn):
-	tskMarks_clear_all(False)
 	tskStart_mark(btn, id_)
-		
 	dType.ClearAllAlarmsState(api, id_)
 	dType.SetQueuedCmdClear(api, id_)
-	
-	dobotStates[id_].posHome=dType.SetHOMECmdEx_mon(api, id_, 1,1)
-
+	dType.SetHOMECmdEx_mon(api, id_, 1,1)
+	dobotStates[id_].posHome=dType.GetPose(api, id_)
 	#dType.printPos(api, id_,0, 0, 0, 0, True)
 	tskEnd_mark(btn)
+	
+
+def btnHome_h(id_,btn):
+	tskMarks_clear_all(False)
+	threading.Thread(target=btnHome_f, args=[id_,btn]).start()
+
 	
 def btnStop_f(id_, btn):
 	tskMarks_clear_all(True)
@@ -719,7 +726,8 @@ dobotStates=[None for i in range(9)]
 class DobotState():
 	pos=[0,0,0] #now, updates while exec "_mon" move function e.g.:  SetHOMECmdEx_mon
 	posCursor=[0,0,0] #target, updates on XY plot click or drom some functions that set target before exec move
-	posHome=[0,0,0] # updates after run btnHome_f
+	posHome=[0,0,0] # updates after run btnHome_h
+	posPivot=[0,0,0]
 	IODI=[]
 	IOAI=[]
 	bOn=False #Dobot online
@@ -795,7 +803,7 @@ class WidgetDraw1(QtWidgets.QWidget):
 		cent=xywh.center() 
 		self.cx=cent.x()
 		self.cy=cent.y()
-		qp.drawLine(QPointF(0, self.cy), QPointF(xywh.width(), self.cy))
+		qp.drawLine(QPointF(0, self.cy), QPointF(xywh.width(), self.cy)) #center cross lines
 		qp.drawLine(QPointF(self.cx, 0), QPointF(self.cx, xywh.height()))
 		
 		self.drawPoints(qp)
@@ -811,6 +819,7 @@ class WidgetDraw1(QtWidgets.QWidget):
 			posCursor=dobotSt.posCursor
 			#print(i)
 			#print(pos)
+			
 			if(len(pos)>2):
 				#qp.setBrush(Qt.black)
 				qp.setBrush(dobotSt.color)
@@ -820,16 +829,19 @@ class WidgetDraw1(QtWidgets.QWidget):
 			if(len(posCursor)>2):
 				qp.setPen(QPen(dobotSt.color, 2))
 				qp.setBrush(dobotSt.color)
-				
 				self.draw1pos(qp, posCursor[0], posCursor[1], posCursor[2], dobotSt, i == window.id_selected) #target	
 			
 
 	def draw1pos(self, qp, x, y, z, dobotSt, bMarkSelection=False):
 		xyz_str=str(round(x,1))+" "+str(round(y,1))+" "+str(round(z,1))
+		
+		x=scale_f(x, xy_scale)
+		y=-scale_f(y, xy_scale)
+		
 		x+=self.cx
 		y+=self.cy
 		
-		qp.drawLine(QPointF(x, y), QPointF(x, y-z*4))
+		qp.drawLine(QPointF(x, y), QPointF(x, y-scale_f(z,0.95)))
 		
 		
 		#qp.setPen(QPen(Qt.red, 2))
@@ -883,8 +895,10 @@ class WidgetDraw1(QtWidgets.QWidget):
 			print("click at: ",points)
 		
 		if(dobotStates[window.id_selected] is not None):
-			dobotStates[window.id_selected].setPosCursorXY(points.x()-self.cx,points.y()-self.cy)
-
+			#print(scale_f(points.x()-self.cx, 1/xy_scale))
+			#print(scale_f(points.y()-self.cy, 1/xy_scale))
+			dobotStates[window.id_selected].setPosCursorXY(scale_f(points.x()-self.cx, 1/xy_scale) ,  -scale_f(points.y()-self.cy, 1/xy_scale))
+		
 		#self.update()
 	def wheelEvent(self, event):
 		if(dobotStates[window.id_selected] is not None):
@@ -892,6 +906,13 @@ class WidgetDraw1(QtWidgets.QWidget):
 		event.accept()
 		#self.update()
 
+def scale_f(x, scale):
+	xsign= -1 if x<0 else 1 #save sing
+	x=pow(abs(x), scale) #scale
+	return  x*xsign
+	
+	
+	
 #=====================================================
 import shutil
 if __name__ == "__main__":
@@ -934,9 +955,9 @@ if __name__ == "__main__":
 	window.btn_fill110.setStyleSheet(style_fill_btn)
 
 
-	window.btnHome_M1.clicked.connect(partial(btnHome_f,id_m1,window.btnHome_M1))
-	window.btnHome_MagL.clicked.connect(partial(btnHome_f,id_magL,window.btnHome_MagL))
-	window.btnHome_MagR.clicked.connect(partial(btnHome_f,id_magR,window.btnHome_MagR))
+	window.btnHome_M1.clicked.connect(partial(btnHome_h,id_m1,window.btnHome_M1))
+	window.btnHome_MagL.clicked.connect(partial(btnHome_h,id_magL,window.btnHome_MagL))
+	window.btnHome_MagR.clicked.connect(partial(btnHome_h,id_magR,window.btnHome_MagR))
 	
 	window.btnStop_M1.clicked.connect(partial(btnStop_f,id_m1,window.btnStop_M1))
 	window.btnStop_MagL.clicked.connect(partial(btnStop_f,id_magL,window.btnStop_MagL))
@@ -967,6 +988,8 @@ if __name__ == "__main__":
 	window.btn_M1_gripperOff.clicked.connect(gripperOff)
 
 	# task
+	window.t0_magR_rail_Home.clicked.connect(t0_magR_rail_Home)
+	window.t01_m1_find_pivot.clicked.connect(t01_m1_find_pivot)
 	window.t1_m1_pos_at_packet.clicked.connect(t1_m1_pos_at_packet_h)
 	window.t2_m1_check_packet.clicked.connect(t2_m1_check_packet_h)
 	window.t3_m1_get_packet.clicked.connect(t3_m1_get_packet_h)
@@ -979,8 +1002,8 @@ if __name__ == "__main__":
 	#debug IO
 	window.btn_getAll_In_draw.clicked.connect(getAll_In_draw)
 	
-	window.btn_rail_up_20.clicked.connect(btn_rail_up_20_h)
-	window.btn_rail_down.clicked.connect(btn_rail_down_h)
+	#window.btn_rail_up_20.clicked.connect(btn_rail_up_20_h) #!! move to scripts
+	#window.btn_rail_down.clicked.connect(btn_rail_down_h)
 
 
 	window.checkBox_bex2.clicked.connect(partial(SetIODOEx_h,window.checkBox_bex2, id_m1, 2))

@@ -1,3 +1,5 @@
+MOV_Relative=7 #to SetPTPCmdEx_mon(api, id_m1, MOV_Relative, x, y, z, rHead, 1)
+MOV_Abs=2
 
 ################################### task_btn_f
 '''
@@ -34,12 +36,7 @@ def t3_m1_get_packet_h():
 	#time.sleep(2)
 	tskEnd_mark(btn)
 '''
-#################home TODO
-id_m1_home_pos=[]
-def home():
-	pass
-	#dType.SetHOMECmdEx(api, id_m1, temp = 0, isQueued = 1)
-	
+
 #################task
 
 '''
@@ -54,6 +51,8 @@ class M1_pos_at_pack:
 m1_pos_at_pack = M1_pos_at_pack()
 '''
 
+
+
 def f_nm():
 	import traceback
 	return traceback.extract_stack(None, 2)[0][2]
@@ -62,6 +61,44 @@ m1_pos_at_pack=[180,  (-320),  30, (-111)]
 m1_pos_at_mag_site=[180,  (-180),  5, (-10)] #!! must move CCW
 m1_pos_at_pack_dx=-40
 m1_pos_at_pack_N=0;
+
+#============= calibrate 0 at Dobot start
+def t0_magR_rail_Home():
+	print(f_nm())
+	tskMarks_clear_all(False)
+	
+	queue_put(thread_magR_queue, t0_magR_rail_Home_f)
+def t0_magR_rail_Home_f():
+	print(f_nm())
+	btn=window.t0_magR_rail_Home
+	#tskStart_mark(btn, id_magR)
+	btnHome_f(id_magR,btn)
+	#tskEnd_mark(btn)
+	queue_put(thread_m1_queue, t01_m1_find_pivot_f)
+	
+def t01_m1_find_pivot():
+	print(f_nm())
+	tskMarks_clear_all(False)
+	queue_put(thread_magR_queue, t0_magR_rail_Home_f)
+def t01_m1_find_pivot_f():
+	print(f_nm())
+	btn=window.t01_m1_find_pivot
+	tskStart_mark(btn, id_magR)
+	
+	while(True):
+		dType.SetPTPCmdEx_mon(api, id_m1, MOV_Relative, None, None, None, 1, 1)# move a bit r-axis
+	
+		if(check_packet()): # check sensor
+			break
+	
+	dobotStates[id_m1].posPivot=dType.GetPose(api, id_m1)
+	
+	tskEnd_mark(btn)
+	queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
+	
+#=============	
+	
+
 def t1_m1_pos_at_packet_h():
 	print(f_nm())
 	tskMarks_clear_all(False) #also clean queues
@@ -124,7 +161,6 @@ def t2_m1_check_packet_f():
 	
 	tskEnd_mark(btn)
 def check_packet():
-	print(f_nm())
 	bPacketFound= (dType.GetIODI(api, id_m1, 17)[0]==1) or window.checkBox_IR_debug.isChecked()
 	print("check_packet IR sensor:", bPacketFound)
 	return bPacketFound
@@ -209,7 +245,6 @@ def t5_magL_wait_m1_f():
 	
 	tskEnd_mark(btn)
 
-
 pos_gift_get =[270,  53,  -58, 0]
 pos_gift_place =[238,  -177,  91, -1]
 	
@@ -224,7 +259,6 @@ def t6_magL_give_and_back_f(): #! re not back
 	tskStart_mark(btn, id_m1)
 
 
-	
 	dType.SetPTPCmdEx_mon(api, id_magL, 2, pos_gift_place[0],  pos_gift_place[1],  pos_gift_place[2], pos_gift_place[3], 1)
 	print_state_id(id_magL)
 	time.sleep(2) ####
@@ -243,11 +277,7 @@ def t6_magL_give_and_back_f(): #! re not back
 	queue_put(thread_m1_queue, t2_m1_check_packet_f) #start next loop  ##!! move to  t5_magL_wait_m1_f
 	
 	tskEnd_mark(btn)
-	tskMarks_clear_all(False)
-	
-	
-	
-	
+	tskMarks_clear_all(False)	
 	
 	
 	
