@@ -1837,7 +1837,7 @@ def SetLostStepCmd(api, dobotId, isQueued=0):
 	
 		
 ##################  Ex扩展函数，该套函数会检测每一条指令运行完毕  ##################
-def GetPoseEx(api, dobotId,  index):
+def GetPoseEx(api, dobotId,  index): #!!TODO index
 	if index == 0:
 		ret = GetDeviceWithL(api, dobotId)
 		if not ret:

@@ -85,11 +85,18 @@ def t01_m1_find_pivot_f():
 	btn=window.t01_m1_find_pivot
 	tskStart_mark(btn, id_magR)
 	
-	while(True):
-		#dType.SetPTPCmdEx_mon(api, id_m1, MOV_Relative, None, None, None, 1, 1)# move a bit r-axis
+	#move CW
+	# check sensor until 0
 	
-		if(check_packet()): # check sensor
+	while(True):
+		#move CCW
+		#dType.SetPTPCmdEx_mon(api, id_m1, MOV_Relative, None, None, None, 1, 1)# move a bit r-axis
+		
+		# check sensor until 1
+		if(check_packet()): 
 			break
+	
+	#repeat for avg
 	
 	dobotStates[id_m1].posPivot=dType.GetPose(api, id_m1)
 	

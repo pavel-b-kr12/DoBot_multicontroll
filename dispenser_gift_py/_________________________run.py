@@ -1,3 +1,5 @@
+#TODO fix 2nd loop
+
 #F4 to toggle prog panel
 
 #int ClearAllAlarmsState(api, id_)
@@ -84,7 +86,7 @@ def thread_magR_f(  ) :
 		doTask(thread_magR_queue, Key.scroll_lock)
 
 #=================================== COM port
-id_m1=-2
+id_m1=-2 #also in dobotStates[id_m1]
 id_magL=-2
 id_magR=-2
 errorString = ['Success','NotFound','Occupied']
@@ -97,13 +99,13 @@ def checkBox_ConnectAll_click(state):
 		disconnectDobots()
 
 def connectDobots():
-	global id_m1
+	global id_m1 #also in dobotStates[id_m1]
 	global id_magL
 	global id_magR
 
 	id_m1=connectDobot("COM3", "m1", QColor(0,111,255,166), window.checkBox_M1, window.label_M1_id) #0   # QtCore.Qt.green QColor(0, 0, 255) Qt.darkYellow
 	id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id) #1
-	id_magR=connectDobot("COM16", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id)  #2 # rail connected
+	id_magR=connectDobot("COM16", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id, bRail=True)  #2 # rail connected
 	
 
 def id_default(i):
@@ -114,7 +116,7 @@ def id_default(i):
 		}
 	return switcher.get(i,2) #default 2
 		 
-def connectDobot(com_nm, id_nm, c, checkbox, label):
+def connectDobot(com_nm, id_nm, c, checkbox, label, bRail=False):
 	id_ = connectCOM(com_nm)  # 0
 	
 	checkbox.setChecked(id_ != -1)  # TODO mark red if fail connect COM
@@ -129,7 +131,7 @@ def connectDobot(com_nm, id_nm, c, checkbox, label):
 	if(id_ == -1):
 		id_=id_default(id_nm) #initial id, for debug or create functions w.o robots
 	
-	dobotStates[id_] = DobotState(id_nm, id_, c)
+	dobotStates[id_] = DobotState(id_nm, id_, c, bRail)
 	dobotStates[id_].bOn=onNow
 
 	return id_
@@ -374,8 +376,6 @@ elem.clicked.connect("""+ffthread_nm+""")
 		break #multiple connect probably cause GUI freeze after click. But all connected to their job
 
 
-	
-
 """
 	global exe_str
 	if len(txts) >0:
@@ -590,7 +590,7 @@ class funcToUIGen:
 		
 		parentElem.addWidget(btn)	#btn_order_, btn_order_row2, 1, 1, 1)
 		
-		#btn.clicked.connect(funcToUIGen.btnHandler) #this send false to Handler
+		#btn.clicked.connect(funcToUIGen.btnHandler) #this send False to Handler
 		btn.clicked.connect(partial(funcToUIGen.btnHandler, btn))
 		#print(__name__) ##==__main__
 		return btn
@@ -733,9 +733,10 @@ class DobotState():
 	IODI=[]
 	IOAI=[]
 	bOn=False #Dobot online
+	bRail=False
 	
 	_lock = threading.Lock()
-	def __init__(self, nm, id_, c):
+	def __init__(self, nm, id_, c, bRail=False):
 		self.color=c
 		self.nm=nm
 		self.id_=id_
@@ -743,6 +744,18 @@ class DobotState():
 			print ("init", nm, id_)
 		self.pos=[id_*30,0,0]
 		self.posCursor=[0,id_*30,0]
+		self.bRail=bRail
+		if(bRail):
+			bRail_now=dType.GetDeviceWithL(api, id_)[0]
+			if(bRail_now):
+				print("dobot id: ",id_, " already connected Rail")
+			else:
+				dType.SetDeviceWithL(api, id_,  True)
+				print(dType.GetDeviceWithL(api, id_))
+				time.sleep(0.5)  #!del
+				print(dType.GetDeviceWithL(api, id_))
+			global dobotRailState
+			dobotRailState=DobotRailState(id_)	
 
 	def setPosNow(self, n):
 		self._lock.acquire()
@@ -781,7 +794,29 @@ class DobotState():
 		
 	# def getPos(self):
 		# return self.pos
-		
+class DobotRailState():
+	l=0
+	id_=0
+	_lock = threading.Lock()
+	
+	def __init__(self,id_):
+		self.id_=id_
+	def getL():
+		self._lock.acquire()
+		self.l=dType.GetPoseL(api, self.id_)
+		self._lock.release()
+		widgetDraw1.update()
+		return self.l
+	def mov_ex(l): #wait untill end
+	
+		self.l=l
+	def mov(l): #non-blocking so can use from UI without new thread 
+		pass
+	#def setCursor(l):
+	#	pass
+dobotRailState=None  #TODO multiple. But currently we have 1
+	
+	
 #=====================================================
 from PySide2.QtCore import Qt
 
