@@ -1,0 +1,7 @@
+id_=id_magR
+nmFunction = 'sys_magR_rail_Home'
+#print("pos: ",dobotStates[id_].pos)
+
+current_pose = dType.GetPose(api, id_)
+dType.SetPTPWithLCmdEx(api, id_, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 500, 1)
+#print("pos: ",dobotStates[id_].pos)
