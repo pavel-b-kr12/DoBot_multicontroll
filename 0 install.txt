@@ -2,6 +2,14 @@
 --0
 pip install PySide2
 pip install pywin32
+pip install pyserial
+pip install pynput
+pip install colorama
+
+#win32clipboard 
+pip install pywin32
+import win32clipboard
+
 
 #nw^ pyside-tools
 
@@ -10,22 +18,25 @@ pip
 pip install pyqt5
 
 
-pip install pyserial
-pip install pynput
 
-#win32clipboard 
-pip install pywin32
-#then you should be able to import win32clipboard:
-import win32clipboard
+
 
 del dobot's QT dlls from exe folder
+
+
+
+
+
+
+
+
+
+
+
+
 --1
 to run - uncomment 	sys.exit(app.exec_())
 to debug from IDLE - comment it 
-
-
-
-
 
 
 
@@ -47,3 +58,43 @@ https://forum.dobot.cc/t/dobot-magician-rotation-axis-of-suction-cup-gripper-not
 --search icon
 https://www.pngfuel.com/search?q=
   icon free -VectorStock
+
+--colorama ansitowin32.py
+AnsiStyle.RESET_ALL: (winterm.reset_all, ),
+                AnsiStyle.BRIGHT: (winterm.style, WinStyle.BRIGHT),
+                AnsiStyle.DIM: (winterm.style, WinStyle.NORMAL),
+                AnsiStyle.NORMAL: (winterm.style, WinStyle.NORMAL),
+                AnsiFore.BLACK: (winterm.fore, WinColor.BLACK),
+                AnsiFore.RED: (winterm.fore, WinColor.RED),
+                AnsiFore.GREEN: (winterm.fore, WinColor.GREEN),
+                AnsiFore.YELLOW: (winterm.fore, WinColor.YELLOW),
+                AnsiFore.BLUE: (winterm.fore, WinColor.BLUE),
+                AnsiFore.MAGENTA: (winterm.fore, WinColor.MAGENTA),
+                AnsiFore.CYAN: (winterm.fore, WinColor.CYAN),
+                AnsiFore.WHITE: (winterm.fore, WinColor.GREY),
+                AnsiFore.RESET: (winterm.fore, ),
+                AnsiFore.LIGHTBLACK_EX: (winterm.fore, WinColor.BLACK, True),
+                AnsiFore.LIGHTRED_EX: (winterm.fore, WinColor.RED, True),
+                AnsiFore.LIGHTGREEN_EX: (winterm.fore, WinColor.GREEN, True),
+                AnsiFore.LIGHTYELLOW_EX: (winterm.fore, WinColor.YELLOW, True),
+                AnsiFore.LIGHTBLUE_EX: (winterm.fore, WinColor.BLUE, True),
+                AnsiFore.LIGHTMAGENTA_EX: (winterm.fore, WinColor.MAGENTA, True),
+                AnsiFore.LIGHTCYAN_EX: (winterm.fore, WinColor.CYAN, True),
+                AnsiFore.LIGHTWHITE_EX: (winterm.fore, WinColor.GREY, True),
+                AnsiBack.BLACK: (winterm.back, WinColor.BLACK),
+                AnsiBack.RED: (winterm.back, WinColor.RED),
+                AnsiBack.GREEN: (winterm.back, WinColor.GREEN),
+                AnsiBack.YELLOW: (winterm.back, WinColor.YELLOW),
+                AnsiBack.BLUE: (winterm.back, WinColor.BLUE),
+                AnsiBack.MAGENTA: (winterm.back, WinColor.MAGENTA),
+                AnsiBack.CYAN: (winterm.back, WinColor.CYAN),
+                AnsiBack.WHITE: (winterm.back, WinColor.GREY),
+                AnsiBack.RESET: (winterm.back, ),
+                AnsiBack.LIGHTBLACK_EX: (winterm.back, WinColor.BLACK, True),
+                AnsiBack.LIGHTRED_EX: (winterm.back, WinColor.RED, True),
+                AnsiBack.LIGHTGREEN_EX: (winterm.back, WinColor.GREEN, True),
+                AnsiBack.LIGHTYELLOW_EX: (winterm.back, WinColor.YELLOW, True),
+                AnsiBack.LIGHTBLUE_EX: (winterm.back, WinColor.BLUE, True),
+                AnsiBack.LIGHTMAGENTA_EX: (winterm.back, WinColor.MAGENTA, True),
+                AnsiBack.LIGHTCYAN_EX: (winterm.back, WinColor.CYAN, True),
+                AnsiBack.LIGHTWHITE_EX: (winterm.back, WinColor.GREY, True),
