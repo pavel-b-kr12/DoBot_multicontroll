@@ -3,7 +3,7 @@
 
 "dispenser_food_py" - is outdated
 
-![python GUI](GUI v0.41.png)
+![python GUI](GUI_v0.41.png)
 
 ### About
 Now this controls 1pcs Dobot M1 and 2pcs of Magician.
