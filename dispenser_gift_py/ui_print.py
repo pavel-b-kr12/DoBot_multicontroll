@@ -1,3 +1,4 @@
+# to in-place, without start new line, use print("...", end="")
 
 from __future__ import print_function
 #import fixpath

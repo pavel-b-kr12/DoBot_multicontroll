@@ -8,6 +8,7 @@ from ui_print import *
 		
 
 bDebug=False # print
+bConnectTascs=False	#!!TODO
 
 bKeyboardLeds=False
 bMainBtns=False
@@ -23,7 +24,6 @@ from PySide2.QtWidgets import (QApplication,QDialog, QMessageBox, QPushButton)
 from PySide2.QtCore import (QFile,QPoint,QPointF,QObject)
 from PySide2.QtGui import (QPen, QPainter, QColor)
 from PySide2 import (QtGui,QtCore,QtWidgets)
-
 
 
 import sys, threading,time, os, random
@@ -108,6 +108,7 @@ def connectDobots():
 	id_magR=connectDobot("COM16", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id, bRail=True)  #2 # rail connected
 	
 
+id_nms_default=["id_m1","id_magL","id_magR"] # for 0, 1 , 2
 def id_default(i):
 	switcher={
 			"m1":0,
@@ -645,7 +646,7 @@ def convertClipboard(id):
 	'''
 	win32clipboard.OpenClipboard()
 	win32clipboard.EmptyClipboard()
-	win32clipboard.SetClipboardText(exec_str)
+	win32clipboard.SetClipboardText(exec_str, win32clipboard.CF_TEXT)
 	win32clipboard.CloseClipboard()
 	'''
 
@@ -724,12 +725,37 @@ def queue_put(q, f): #TODO2 mark enqueued
 	
 #=====================================================
 
+PTP_mode_xyz_LINEAR=2		
+PTP_mode_xyz=1
+PTP_mode_J_LINEAR=5		
+PTP_mode_J=4	
+#!TODO toggle GUI
+
+def CopyToClipboard(s):
+		win32clipboard.OpenClipboard()
+		win32clipboard.EmptyClipboard()
+		win32clipboard.SetClipboardText( s, win32clipboard.CF_TEXT )
+		win32clipboard.CloseClipboard()
+def print_selected_PosNow_copy_movXYZ(pos):
+	s="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_xyz_LINEAR)+",	%1s,	%1s,	%1s,	%1s, 1"%(pos[0],pos[1],pos[2],pos[3])+") #movXYZ\r\n"
+	print("\r\n",s)
+	CopyToClipboard(s)
+	return s
+def print_selected_PosNow_copy_movJ(pos, s1=""):
+	s="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_J)+",	%1s,	%1s,	%1s,	%1s, 1"%(pos[4],pos[5],pos[6],pos[7])+") #movJ\r\n"
+	print("\r\n",s)
+	CopyToClipboard(s+s1)
+	return s
+
+
+#=====================================================
+
 dobotStates=[None for i in range(9)]
 class DobotState():
-	pos=[0,0,0] #now, updates while exec "_mon" move function e.g.:  SetHOMECmdEx_mon
-	posCursor=[0,0,0] #target, updates on XY plot click or drom some functions that set target before exec move
-	posHome=[0,0,0] # updates after run btnHome_h
-	posPivot=[0,0,0]
+	pos=[0,0,0,0] #now, updates while exec "_mon" move function e.g.:  SetHOMECmdEx_mon
+	posCursor=[0,0,0,0] #target, updates on XY plot click or drom some functions that set target before exec move
+	posHome=[0,0,0,0] # updates after run btnHome_h
+	posPivot=[0,0,0,-6,1133]
 	IODI=[]
 	IOAI=[]
 	bOn=False #Dobot online
@@ -975,6 +1001,7 @@ if __name__ == "__main__":
 	
 	dType.window=window #for monitor xyz
 	window.id_selected=0 ###!! move to dType
+	window.id_nms_default=id_nms_default
 	dType.dobotStates=dobotStates
 
 	window.checkBox_ConnectAll.stateChanged.connect(checkBox_ConnectAll_click)

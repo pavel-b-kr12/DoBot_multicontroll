@@ -57,10 +57,25 @@ def f_nm():
 	import traceback
 	return traceback.extract_stack(None, 2)[0][2]
 
-m1_pos_at_pack=[180,  (-320),  30, (-111)]
+
+def movJ(id_, posJ):
+	print("posJ:",posJ)
+	dType.SetPTPCmdEx_mon(api, id_, 4, posJ[0],  posJ[1],  posJ[2], posJ[3]+dobotStates[id_].posPivot[3], 1)
+	print("now:",dType.GetPose(api, id_))
+def movRail(id_, L):
+	current_pose = dType.GetPose(api, id_)
+	dType.SetPTPLParamsEx(api, id_,200,30,1)
+	dType.SetPTPWithLCmdEx(api, id_, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], L, 1)
+	
+	
+m1_pos_at_pack=[-2.8,-45.88,25.5,37.22+6,1133]
+m1_pos_before_pack=[23,8,-66,25.5,30+6,1133]
+#J angle  dType.SetPTPCmdEx(api, 4, m1_pos_at_pack[0],  m1_pos_at_pack[1],  m1_pos_at_pack[2], m1_pos_at_pack[3]+dobotStates[id_m1].posPivot[3], 1)
+
 m1_pos_at_mag_site=[180,  (-180),  5, (-10)] #!! must move CCW
 m1_pos_at_pack_dx=-40
-m1_pos_at_pack_N=0;
+m1_pos_at_pack_Nx=0
+m1_pos_at_pack_Ny=0
 
 #============= calibrate 0 at Dobot start
 def t0_magR_rail_Home():
@@ -85,24 +100,48 @@ def t01_m1_find_pivot_f():
 	btn=window.t01_m1_find_pivot
 	tskStart_mark(btn, id_magR)
 	
-	#move CW
-	# check sensor until 0
+	#move to target pos
+	movRail(id_magR, 780)
+	
+	pos_m1 = dType.GetPose(api, id_m1)
+	print(pos_m1)
 	
 	while(True):
+		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, 2, 1)
+		if(check_packet()): 
+			break
+
+	#rot CW
+	#check sensor until 0
+	while(True):
+		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, -2, 1)
+		if(not check_packet()): 
+			break
+	pos_m1 = dType.GetPose(api, id_m1)
+	print(pos_m1)
+	#rot CCW
+	#check sensor until 1
+	while(True):
+		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, 0.1, 1)
 		#move CCW
 		#dType.SetPTPCmdEx_mon(api, id_m1, MOV_Relative, None, None, None, 1, 1)# move a bit r-axis
 		
 		# check sensor until 1
 		if(check_packet()): 
 			break
+			
+	pos_m1 = dType.GetPose(api, id_m1)
+	print("find target at: ",pos_m1[0:4],"  r:", pos_m1[7])
 	
 	#repeat for avg
 	
 	dobotStates[id_m1].posPivot=dType.GetPose(api, id_m1)
 	
 	tskEnd_mark(btn)
-	queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
+	if(bConnectTascs):
+		queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
 	
+
 #=============	
 	
 
@@ -111,19 +150,31 @@ def t1_m1_pos_at_packet_h():
 	tskMarks_clear_all(False) #also clean queues
 	#thread_m1.join(); #TODO  or wait thread_m1_queue empty
 	
-	
 	queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
 def t1_m1_pos_at_packet_f():
 	print(f_nm())
 	btn=window.t1_m1_pos_at_packet
 	tskStart_mark(btn, id_m1)
+	
+	dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
+	movJ(id_m1,m1_pos_before_pack)
+	movRail(id_magR, 780-m1_pos_at_pack_Nx*180)
+	movJ(id_m1,m1_pos_at_pack) #at this pos sensor can check, and Z up can pick packet. But cant move Y
 
-	#print_state_m1(id_m1)
+	
+	#print(dobotStates[id_m1])
+	#print(dobotStates[id_m1].posPivot[3])
+	#print("m1 pos:", dType.GetPose(api, id_m1))
+	#print(m1_pos_at_pack[0],  m1_pos_at_pack[1],  m1_pos_at_pack[2], m1_pos_at_pack[3]+dobotStates[id_m1].posPivot[3])
+	
+	#print_state_id(id_m1)
 	#dType.SetPTPCmdEx_mon(api, id_m1, 2, m1_pos_at_pack[0]+m1_pos_at_pack_dx*m1_pos_at_pack_N,  m1_pos_at_pack[1],  m1_pos_at_pack[2],  m1_pos_at_pack[3], 1)
 	#print_state_id(id_m1)
 	#time.sleep(3) ####
-	dType.SetPTPCmdEx_mon(api, id_m1, 2, m1_pos_at_pack[0]+m1_pos_at_pack_dx*m1_pos_at_pack_N,  m1_pos_at_pack[1]-20,  m1_pos_at_pack[2],  m1_pos_at_pack[3], 1) #to IR sensor distance
-	print_state_id(id_m1)
+	
+	#dType.SetPTPCmdEx_mon(api, id_m1, 2, m1_pos_at_pack[0]+m1_pos_at_pack_dx*m1_pos_at_pack_N,  m1_pos_at_pack[1]-20,  m1_pos_at_pack[2],  m1_pos_at_pack[3], 1) #to IR sensor distance
+	#print_state_id(id_m1)
+	
 	#time.sleep(3) ####
 	'''
 	dType.SetPTPCmdEx_mon(api, 2, 180,  (-280),  30, 22, 1)
@@ -138,8 +189,8 @@ def t1_m1_pos_at_packet_f():
 	print("m1_pos_at_packet", dType.GetPoseEx(api, id_m1, 1))
 	'''
 	tskEnd_mark(btn)
-	
-	queue_put(thread_m1_queue, t2_m1_check_packet_f)
+	#if(bConnectTascs):
+	#queue_put(thread_m1_queue, t2_m1_check_packet_f)
 
 
 
@@ -151,24 +202,34 @@ def t2_m1_check_packet_h():
 
 def t2_m1_check_packet_f():
 	print(f_nm())
-	global m1_pos_at_pack_N
+	global m1_pos_at_pack_Nx
+	global m1_pos_at_pack_Ny
 	btn=window.t2_m1_check_packet
 	tskStart_mark(btn, id_m1)
 	
 	if(check_packet()):
-		queue_put(thread_m1_queue,t3_m1_get_packet_f)
-		time.sleep(2) ####
+		#if(bConnectTascs):
+		#queue_put(thread_m1_queue,t3_m1_get_packet_f)
+		#time.sleep(2) ####
+		pass
 	else:
 		print("no packet, so going to other pos")
-		m1_pos_at_pack_N+= 1
-		if(m1_pos_at_pack_N==3):
-			m1_pos_at_pack_N=0;
-		queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
-		time.sleep(2) ####
+		m1_pos_at_pack_Nx+= 1
+		if(m1_pos_at_pack_Nx==3):
+			m1_pos_at_pack_Nx=0
+			m1_pos_at_pack_Ny+=1
+			if(m1_pos_at_pack_Ny==5):
+				print("!! out of packets") #TODO
+				m1_pos_at_pack_Ny=0
+				m1_pos_at_pack_Nx=0
+				pass
+			
+			
+		#if(bConnectTascs):
+		#queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
+		#time.sleep(2) ####
 	
 	tskEnd_mark(btn)
-	
-
 	
 def check_packet():
 	bPacketFound= (dType.GetIODI(api, id_m1, 17)[0]==1) or window.checkBox_IR_debug.isChecked()
@@ -190,17 +251,39 @@ def t3_m1_get_packet_f():
 	btn=window.t3_m1_get_packet
 	tskStart_mark(btn, id_m1)
 
+	movJ(id_m1,[-9.495, -41,	228,	38.96]) #pack get
 	
-	dType.SetPTPCmdEx_mon(api, id_m1, 2, m1_pos_at_pack[0]+m1_pos_at_pack_dx*m1_pos_at_pack_N,  m1_pos_at_pack[1],  m1_pos_at_pack[2]+10,  m1_pos_at_pack[3]+30, 1)
-	print_state_id(id_m1)
-	time.sleep(2) ####
+	movJ(id_m1,[38.7,	-75.1,	228,	27.8]) #move
+	movJ(id_m1,[56.8,	-84.6,	228,	22]) #
+	movJ(id_m1,[84,		-81.6,	228,	-2]) #
+	#move rail
+	current_pose = dType.GetPose(api, id_magR)
+	dType.SetPTPWithLCmdEx(api, id_magR, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 580, 1)
+	
+	movJ(id_m1,[83.7,	-29,	228,	27]) #place
+	movJ(id_m1,[83.7,	-29,	145,	27]) #
+	
+	movJ(id_m1,[83.7,	8.8,	152,	2]) #out from it
+	movJ(id_m1,[83.7,	8.8,	160,	2]) #
+	
+	movJ(id_m1,[60,		-38,	200,	2]) #
+	movJ(id_m1,[31,		-48,	140,	2]) #
+	
+	#move rail
+	current_pose = dType.GetPose(api, id_magR)
+	dType.SetPTPWithLCmdEx(api, id_magR, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 780, 1)
+	
+
+	#print_state_id(id_m1)
+
 	
 	print("put t5_magL_wait_m1_f")
-	queue_put(thread_magL_queue,t5_magL_wait_m1_f)
+	#queue_put(thread_magL_queue,t5_magL_wait_m1_f)
 
 	tskEnd_mark(btn)
 	
-	queue_put(thread_m1_queue,t4_m1_packet_to_mag_site_f)
+	if(bConnectTascs):
+		queue_put(thread_m1_queue,t4_m1_packet_to_mag_site_f)
 	
 def t4_m1_packet_to_mag_site_h():
 	print(f_nm())

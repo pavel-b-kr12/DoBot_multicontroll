@@ -1,2 +1,45 @@
 	min  max
-m1   []   [0,0,233]
+m1   [,,9]   [0,0,233]
+m1  J[,,9]   [84.9,0,233]
+
+-3.6359 -43.6 11.9  55.2
+
+
+pivot z
+L=780   L_M=785
+[400.0, 0.0, 37.76323, -6.1133] == J  [0.0, 0.0, 37.76323, -6.1133]
+
+[-2.87,-45.88,25.53,37.22]
+
+
+
+pack 0
+J
+
+pack before get
+-9.4952 -40.9904 75.4 38.96
+
+pack get
+-9.4952 -40.9904 228 38.96
+move
+38.7 -75.1 228 27.8
+56.8 -84.6 228 22
+84 -81.6 228 -2
+l 580
+
+place
+83.7	-29	228	27
+83.7	145
+out from it
+83.7	8.7	155	2 (25)
+83.7	8.7	190	2
+
+60	-38	200	2
+31	-48	140	2
+l 780
+
+
+The inverse kinematics solution calculated according to the planned target point is greater than the specified joint angle.
+The inverse kinematics solution calculated according to the planned target point is greater than the specified joint angle in all modeds.
+1.Check whether the joint angle of the target point is greater than the specified joint angle. Modify and resave it. 
+2.Click "Clear Alarm".
