@@ -79,13 +79,83 @@ def on_press(key):  #https://pythonhosted.org/pynput/keyboard.html#monitoring-th
 	pass
 	#print('{0} pressed'.format(key))
 
+def mov_rel_x_10_sel():
+	id_=window.id_selected 
+	dType.SetPTPCmdEx_mon(api, id_, 7, 10,  0,  0, 0, 1)
+def mov_rel_xn_10_sel():
+	id_=window.id_selected 
+	dType.SetPTPCmdEx_mon(api, id_, 7, -10,  0,  0, 0, 1)	
+
+def mov_rel_r_10_sel():
+	id_=window.id_selected 
+	dType.SetPTPCmdEx_mon(api, id_, 7, 0,  0,  0, 5, 1)
+def mov_rel_rn_10_sel():
+	id_=window.id_selected 
+	dType.SetPTPCmdEx_mon(api, id_, 7, 0,  0,  0, -5, 1)	
 
 def on_release(key):
+	print(key, end="") #key.vk - for numpad
+	if(hasattr(key, 'vk')):
+		print(" ", key.vk) #key.vk - for numpad
+	else:
+		print()
+	
 	class1.key=key
-
+	
+	if(key==Key.left):
+		mov_rel_x_10_sel()
+	if(key==Key.right):
+		mov_rel_xn_10_sel()
+		
+	if(key==Key.delete):
+		mov_rel_r_5_sel()		
+	if(key==Key.delete):
+		mov_rel_rn_5_sel()
+	
+	'''
+	Key.left
+	Key.right
+	Key.up
+	Key.down
+	Key.page_up
+	Key.page_down
+	Key.delete
+	Key.end
+	
+	Key.num_lock
+	
+	Key.end
+	Key.home
+	
+	'''
+	
+	'''
+	if hasattr(key, 'vk') and 96 <= key.vk <= 105:
+		if(key=='1'):
+			print(1)
+			
+		return True
+	'''
+	
 	if(key is None):
 		print("! key None")
 		return False
+		
+	if(key == Key.home):
+		btnStop_f(id_m1)
+		btnStop_f(id_magR)
+		btnStop_f(id_magL)
+		#btnHome_f(id_magL)
+		btnHome_f(id_magR)
+		#!! initial id_m1
+		return
+	if(key == Key.insert):
+		t01_m1_find_pivot_f()
+		return
+		
+	'''
+
+	'''
 		
 	if key == KeyCode.from_char('p'):
 		pass
@@ -101,7 +171,7 @@ def on_release(key):
 			class1.window.id_selected=id_selected #global nw here so sore in window
 			class1.window.widgetDraw1.update()
 	except:
-		print("! key handler err")
+		print("! key handler err") #@ test off num_lock, press num_5
 	
 	if key == Key.f1:
 		#handleOpenDialog(class1.window)

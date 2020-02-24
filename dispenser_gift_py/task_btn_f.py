@@ -62,6 +62,22 @@ def movJ(id_, posJ):
 	print("posJ:",posJ)
 	dType.SetPTPCmdEx_mon(api, id_, 4, posJ[0],  posJ[1],  posJ[2], posJ[3]+dobotStates[id_].posPivot[3], 1)
 	print("now:",dType.GetPose(api, id_))
+def movJ_def(id_, j1,j2,j3,j4): #set None to stay current
+	pos_now=dType.GetPose(api, id_)
+	if(j1 is None):
+		j1=pos_now[4]
+	if(j2 is None):
+		j2=pos_now[5]
+	if(j3 is None):
+		j3=pos_now[6]
+	if(j4 is None):
+		j4=pos_now[7]
+	else:
+		j4+=dobotStates[id_].posPivot[3]
+		
+	#print("posJ:",[j1,j2,j3,j4])
+	dType.SetPTPCmdEx_mon(api, id_, 4, j1, j2, j3, j4, 1)
+	print("now:",dType.GetPose(api, id_))
 def movRail(id_, L):
 	current_pose = dType.GetPose(api, id_)
 	dType.SetPTPLParamsEx(api, id_,200,30,1)
@@ -70,13 +86,13 @@ def movRail(id_, L):
 	
 m1_pos_at_pack=[-2.8,-45.88,25.5,37.22+6,1133]
 m1_pos_before_pack=[23,8,-66,25.5,30+6,1133]
-#J angle  dType.SetPTPCmdEx(api, 4, m1_pos_at_pack[0],  m1_pos_at_pack[1],  m1_pos_at_pack[2], m1_pos_at_pack[3]+dobotStates[id_m1].posPivot[3], 1)
+#J angle  movJ( m1_pos_at_pack[0],  m1_pos_at_pack[1],  m1_pos_at_pack[2], m1_pos_at_pack[3]+dobotStates[id_m1].posPivot[3], 1)
 
 m1_pos_at_mag_site=[180,  (-180),  5, (-10)] #!! must move CCW
 m1_pos_at_pack_dx=-40
 m1_pos_at_pack_Nx=0
 m1_pos_at_pack_Ny=0
-
+pos_rail_pivot=760  #780max to not hit 
 #============= calibrate 0 at Dobot start
 def t0_magR_rail_Home():
 	print(f_nm())
@@ -101,20 +117,23 @@ def t01_m1_find_pivot_f():
 	tskStart_mark(btn, id_magR)
 	
 	#move to target pos
-	movRail(id_magR, 780)
+	movRail(id_magR, pos_rail_pivot)
+	movJ_def(id_m1, None,None, 84,None) #z 37
 	
 	pos_m1 = dType.GetPose(api, id_m1)
 	print(pos_m1)
 	
+	#rot CCW
+	#check sensor until 1
 	while(True):
-		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, 2, 1)
 		if(check_packet()): 
 			break
-
+		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, 2, 1)
+		
 	#rot CW
 	#check sensor until 0
 	while(True):
-		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, -2, 1)
+		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, -1, 1)
 		if(not check_packet()): 
 			break
 	pos_m1 = dType.GetPose(api, id_m1)
@@ -157,9 +176,28 @@ def t1_m1_pos_at_packet_f():
 	tskStart_mark(btn, id_m1)
 	
 	dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
-	movJ(id_m1,m1_pos_before_pack)
-	movRail(id_magR, 780-m1_pos_at_pack_Nx*180)
-	movJ(id_m1,m1_pos_at_pack) #at this pos sensor can check, and Z up can pick packet. But cant move Y
+
+
+	movJ( 1,  (-47),  27, (rP + (33 - r0)))
+	movJ( 1,  (-47),  228, (rP + (33 - r0)))
+	movJ( 57,  (-73),  228, (rP + (24 - r0)))
+	movJ( 77,  (-85),  195, (rP + (0 - r0)))
+
+
+
+	movJ( 1,  (-47),  27, (rP + (33 - r0)))
+	movJ( 1,  (-47),  228, (rP + (33 - r0)))
+	movJ( 57,  (-73),  228, (rP + (24 - r0)))
+	movJ( 77,  (-85),  195, (rP + (0 - r0)))
+	movJ( 74,  (-33),  195, (rP + (46 - r0)))
+	movJ( 74,  (-33),  146, (rP + (46 - r0)))
+	movJ( 74,  (-11),  146, (rP + (18 - r0)))
+	movJ( 74,  (-80),  220, (rP + (18 - r0)))
+
+
+	movJ(id_m1,[3,  (-48),  27, 31]) #m1_pos_before_pack
+	movRail(id_magR, pos_rail_pivot-m1_pos_at_pack_Nx*180)
+	movJ(id_m1,[-14,  (-25),  27, 31]) #m1_pos_at_pack at this pos sensor can check, and Z up can pick packet. But cant move Y
 
 	
 	#print(dobotStates[id_m1])
@@ -271,7 +309,7 @@ def t3_m1_get_packet_f():
 	
 	#move rail
 	current_pose = dType.GetPose(api, id_magR)
-	dType.SetPTPWithLCmdEx(api, id_magR, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 780, 1)
+	dType.SetPTPWithLCmdEx(api, id_magR, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], pos_rail_pivot, 1)
 	
 
 	#print_state_id(id_m1)

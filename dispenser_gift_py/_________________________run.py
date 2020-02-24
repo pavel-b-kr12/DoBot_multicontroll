@@ -233,10 +233,9 @@ def btn_redraw_end(btn):
 	btn.setText(btn.txt)
 	btn.setStyleSheet(style_order_btn)
 	btn.setEnabled(True)
+	
 #==================== fill btns
-
-
-fill=100
+fill=100 # global setting that can be set with left bar in GUI
 
 def btn_fill_redraw():
 	window.btn_fill10.setStyleSheet(style_fill_btn)
@@ -248,28 +247,31 @@ def btn_fill_redraw_selected(btn):
 	btn.setStyleSheet(style_fill_btn_selected)
 
 def btn_handler_btn_fill10():
+	global fill
 	fill=10
 	btn_fill_redraw()
 	btn_fill_redraw_selected(window.btn_fill10)
 def btn_handler_btn_fill50():
+	global fill
 	fill=50
 	btn_fill_redraw()
 	btn_fill_redraw_selected(window.btn_fill50)
 	btn_fill_redraw_selected(window.btn_fill10)
 def btn_handler_btn_fill100():
+	global fill
 	fill=100
 	btn_fill_redraw()
 	btn_fill_redraw_selected(window.btn_fill100)
 	btn_fill_redraw_selected(window.btn_fill50)
 	btn_fill_redraw_selected(window.btn_fill10)
 def btn_handler_btn_fill110():
+	global fill
 	fill=110
 	btn_fill_redraw()
 	btn_fill_redraw_selected(window.btn_fill110)
 	btn_fill_redraw_selected(window.btn_fill100)
 	btn_fill_redraw_selected(window.btn_fill50)
 	btn_fill_redraw_selected(window.btn_fill10)
-
 
 #===================================================================== style
 style_order_btn="""
@@ -690,13 +692,15 @@ def check_clipboard_every2s():
 
 
 def btnHome_f(id_,btn):
-	tskStart_mark(btn, id_)
+	if(btn is not None):
+		tskStart_mark(btn, id_)
 	dType.ClearAllAlarmsState(api, id_)
 	dType.SetQueuedCmdClear(api, id_)
 	dType.SetHOMECmdEx_mon(api, id_, 1,1)
 	dobotStates[id_].posHome=dType.GetPose(api, id_)
 	#dType.printPos(api, id_,0, 0, 0, 0, True)
-	tskEnd_mark(btn)
+	if(btn is not None):
+		tskEnd_mark(btn)
 	
 
 def btnHome_h(id_,btn):
@@ -704,7 +708,7 @@ def btnHome_h(id_,btn):
 	threading.Thread(target=btnHome_f, args=[id_,btn]).start()
 
 	
-def btnStop_f(id_, btn):
+def btnStop_f(id_):
 	tskMarks_clear_all(True)
 	
 	queue_clear(thread_m1_queue)
@@ -1024,9 +1028,9 @@ if __name__ == "__main__":
 	window.btnHome_MagL.clicked.connect(partial(btnHome_h,id_magL,window.btnHome_MagL))
 	window.btnHome_MagR.clicked.connect(partial(btnHome_h,id_magR,window.btnHome_MagR))
 	
-	window.btnStop_M1.clicked.connect(partial(btnStop_f,id_m1,window.btnStop_M1))
-	window.btnStop_MagL.clicked.connect(partial(btnStop_f,id_magL,window.btnStop_MagL))
-	window.btnStop_MagR.clicked.connect(partial(btnStop_f,id_magR,window.btnStop_MagR))
+	window.btnStop_M1.clicked.connect(partial(btnStop_f,id_m1))
+	window.btnStop_MagL.clicked.connect(partial(btnStop_f,id_magL))
+	window.btnStop_MagR.clicked.connect(partial(btnStop_f,id_magR))
 	
 	window.btn_convertClipboard_m1.clicked.connect(partial(convertClipboard,'m1')) #! or id_m1 if failed to exec "id='id_m1'"
 	window.btn_convertClipboard_magL.clicked.connect(partial(convertClipboard,'magL'))

@@ -1,4 +1,0 @@
-nmFunction = 'sys_move_to_cursor_relative_selected'id_=window.id_selected 
-print("dobotStates[id_]: ",dobotStates[id_].posCursor)
-dType.SetPTPCmdEx_mon(api, id_, 7, dobotStates[id_].posCursor[0],  dobotStates[id_].posCursor[1],  dobotStates[id_].posCursor[2], 0, 1)
-print("dobotStates[id_]: ",dobotStates[id_].pos)
