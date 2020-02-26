@@ -96,7 +96,7 @@ def mov_rel_rn_5_sel():
 	class1.window.dType.SetPTPCmdEx_mon(api, id_, 7, 0,  0,  0, -5, 1)	
 
 def on_release(key):
-	print(key)
+	#print(key)
 	'''
 	print(key, end="")
 	if(hasattr(key, 'vk')):
@@ -104,35 +104,6 @@ def on_release(key):
 	else:
 		print()
 	'''
-	
-	if( key in class1.keys ):
-		class1.keys.remove(key)
-		#print(class1.keys)
-	
-	if(key==Key.left):
-		mov_rel_x_10_sel()
-	if(key==Key.right):
-		mov_rel_xn_10_sel()
-		
-	if(key==Key.delete):
-		mov_rel_r_5_sel()		
-	if(key==Key.delete):
-		mov_rel_rn_5_sel()	
-
-
-	if(key==Key.backspace):
-		#for i in range(9):
-		#	dobotSt=class1.window.dobotStates[i]
-		dobotSt=class1.window.dobotStates[class1.window.id_selected]
-		#if(dobotSt == None):
-		#	continue
-		print(dobotSt.pos_hist)
-		try:
-			dobotSt.pos_hist.pop() 
-		except:
-			pass
-				
-	
 	'''
 	Key.left
 	Key.right
@@ -165,6 +136,43 @@ def on_release(key):
 		return True
 	'''
 	
+	if( key in class1.keys ):
+		class1.keys.remove(key)
+		#print(class1.keys)
+	
+	if(key==Key.left):
+		mov_rel_x_10_sel()
+	if(key==Key.right):
+		mov_rel_xn_10_sel()
+		
+	if(key==Key.delete):
+		mov_rel_r_5_sel()		
+	if(key==Key.delete):
+		mov_rel_rn_5_sel()	
+
+
+	if(key==Key.backspace):
+		#for i in range(9):
+		#	dobotSt=class1.window.dobotStates[i]
+		dobotSt=class1.window.dobotStates[class1.window.id_selected]
+		#if(dobotSt == None):
+		#	continue
+		
+		pos=dobotSt.pos_hist.pop()
+		print(pos) #dobotSt.pos_hist
+		dobotSt.setPosCursorXYZR ( pos )
+			
+		'''
+		try:
+			pos=dobotSt.pos_hist.pop()
+			print(pos) #dobotSt.pos_hist
+			dobotSt.setPosCursor( pos )
+		except:
+			pass
+		'''		
+	
+
+	
 	if(key is None):
 		print("! key None")
 		return False
@@ -181,9 +189,8 @@ def on_release(key):
 		t01_m1_find_pivot_f()
 		return
 		
-	'''
 
-	'''
+
 	
 	if key == KeyCode.from_char('c'):
 		class1.window.dobotStates[0].cursor_to_pos_selected()

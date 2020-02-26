@@ -1986,8 +1986,12 @@ def SetPTPCmdEx_mon(api, dobotId, ptpMode, x, y, z, rHead, isQueued):
 	ret = SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued)
 	#print(x, y, z)
 	while(True):
-		printPosNow(api, dobotId)
+		pos_now=printPosNow(api, dobotId)
 		if ret[0] <= GetQueuedCmdCurrentIndex(api, dobotId)[0]:
+			try:
+				dobotStates[dobotId].pos_hist.append(pos_now) #TODO lock thread safe
+			except:
+				pass
 			break
 		dSleep(5)
 
@@ -2007,7 +2011,7 @@ def print_PosCursor(api, dobotId, x, y, z, rHead, bPrint=False): # TODO separate
 	if(bPrint):
 		window.label_m1_pos_target.setText("target: %4s %4s %4s %4s"%(round(x,1), round(y,1), round(z,1), round(rHead,1))) # %4s %4d round(x,2) !!TODO
 	if(dobotStates[dobotId] is not None):
-		dobotStates[dobotId].setPosCursorXYZ([x, y, z, rHead])
+		dobotStates[dobotId].setPosCursorXYZR([x, y, z, rHead])
 
 
 

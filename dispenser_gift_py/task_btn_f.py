@@ -58,8 +58,8 @@ def t01_m1_find_pivot_f(): #115.3
 	
 	#move to target pos to set pivot for r-axis
 	dobotRailState.mov(pos_rail_pivot)
-	m1.movJ_def_p([None, None, m1_pos_at_pivot, None]) #z
-	m1.movJ_def_p(m1_pos_at_pivot)
+	m1.movJ([None, None, m1_pos_at_pivot, None]) #z
+	m1.movJ(m1_pos_at_pivot)
 	
 
 	#!@@ TODO replace w dType SetTRIGCmd		#TODO repeat for avg
@@ -89,7 +89,7 @@ def t01_m1_find_pivot_f(): #115.3
 	m1.posPivot=dType.GetPose(api, id_m1) #TODO draw it
 	
 	# firstly need mov out of pivot to use cartesian XYZ, because can't go for j 0,0 other way then movJ
-	m1.movJ_def(-14.221565246582031,	-47.71931838989258,	None,	15.440947532653809)
+	m1.movJ(-14.221565246582031,	-47.71931838989258,	None,	15.440947532653809)
 
 	tskEnd_mark(btn)
 	if(bConnectTascs):

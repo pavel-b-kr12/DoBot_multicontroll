@@ -20,9 +20,7 @@ Press F1 for key map
 * sw xyz/J
 * convert xyz/J 2F^
 
-- [ ] ctrl+wheel change r-axis
-- [ ] shift+wheel change rail L
-- [ ] draw that
+* toggle auto upd pos from cursor
 
 save rail at off
 
@@ -52,6 +50,11 @@ pip install colorama
 pip install pywin32 REM win32clipboard 
 
 
+### UI  guide:
+- ctrl+wheel change r-axis
+- shift+wheel change rail L
+- left|rigrt alt+abowe - faster|slower
+- c cursor to current pos
 ### Tips:
 * SetArmOrientation is need to move with XYZ, but not with Joints
 * 🐛 M1 still has buggy HOME  function at 2020. Do not HOME or you lost angle of r-axis. Use "INITIAL Position". Also replace battery if it deplated. You can use 18650+3.3v LDO

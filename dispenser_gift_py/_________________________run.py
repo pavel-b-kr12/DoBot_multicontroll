@@ -790,11 +790,11 @@ def print_selected_PosNow_copy_movJ(pos, s1=""):
 dobotStates=[None for i in range(9)]
 class DobotState():
 	pos=[0,0,0,0] #now, updates while exec "_mon" move function e.g.:  SetHOMECmdEx_mon
-	pos_hist=[[0,0,0,0], [110,110,10,0]] #!!
+	pos_hist=[[22,33,44,55], [88,88,10,0]] #!!
 	posCursor=[0,0,0,0] #target, updates on XY plot click or drom some functions that set target before exec move
 	posCursorL=0;
 	posHome=[0,0,0,0] # updates after run btnHome_h
-	posPivot=[0,0,0,-6,0]
+	posPivot=[0,0,0,0,0]
 	IODI=[]
 	IOAI=[]
 	bOn=False #Dobot online
@@ -811,7 +811,7 @@ class DobotState():
 			self.posCursor=[0,id_*30,0,0]
 		else:
 			self.pos=dType.GetPose(api, id_)
-			self.posCursor=self.pos #  setPosCursorXYZ(self.pos)
+			self.posCursor=self.pos #  setPosCursorXYZR(self.pos)
 		
 		
 		#print(dType.GetDeviceWithL(api, id_)) #?!TODO F^ always True at start
@@ -842,16 +842,10 @@ class DobotState():
 		self.pos=n
 		self._lock.release()
 		widgetDraw1.update()
-	def setPos(self, x,y,z,r,  n):
+
+	def setPosCursorXYZR(self, xyzr_arr):
 		self._lock.acquire()
-		self.pos=n
-		self.posCursor=[x,y,z,r]
-		#self.pos=[n[0],n[1],n[2],n[3],n[4], x,y,z,r]
-		self._lock.release()
-		widgetDraw1.update()
-	def setPosCursorXYZ(self, xyz_arr):
-		self._lock.acquire()
-		self.posCursor=xyz_arr
+		self.posCursor=xyzr_arr
 		self._lock.release()
 		widgetDraw1.update()
 	def setPosCursorXY(self, x,y):
@@ -888,22 +882,37 @@ class DobotState():
 	def home_mon(self, btn=None):
 		btnHome_f(self.id_, btn)
 
-	
-	def mov(self, pos):
-		dType.SetPTPCmdEx_mon(api, self.id_, 2, pos[0],  pos[1],  pos[2], pos[3]+self.posPivot[3], 1)	
+	#-------------------------------
+	def mov(self, pos):	#relative to pivot r-axis
+		if(pos[3] is not None):
+			 pos[3]+=self.posPivot[3]
+		dType.SetPTPCmdEx_mon(api, self.id_, 2, pos[0],  pos[1],  pos[2], pos[3], 1)	
 	def mov_relative(self, pos):
-		dType.SetPTPCmdEx_mon(api, self.id_, 7, pos[0],  pos[1],  pos[2], pos[3], 1)	
+		dType.SetPTPCmdEx_mon(api, self.id_, 7, pos[0],  pos[1],  pos[2], pos[3], 1)
+		
 	def movJ_relative(self, posJ):
 		dType.SetPTPCmdEx_mon(api, self.id_, 6, posJ[0],  posJ[1],  posJ[2], posJ[3], 1)
 	
 	def movJ_abs(self, posJ):
 		dType.SetPTPCmdEx_mon(api, self.id_, 4, pos[0], pos[1], pos[2], pos[3], 1)
 		
-	def movJ(self, j1,j2,j3,j4):	#relative to pivot r-axis
-		self.movJ_abs(self, [j1,  j2,  j3, j4+self.posPivot[3]]) 
-	def movJp(self, posJ):			#relative to pivot
-		self.movJ(posJ[0],  posJ[1],  posJ[2], posJ[3])
+	#-------------------------------
+	
+	#def movJ(self, j1,j2,j3,j4):	#relative to pivot r-axis
+	#	self.movJ_abs(self, [j1,  j2,  j3, j4+self.posPivot[3]]) 
 		
+
+	def movJ(self, pos):			#relative to pivot r-axis
+		if(pos[3] is not None):
+			 pos[3]+=self.posPivot[3]
+		self.movJ_abs([pos[0], pos[1], posJ[2], posJ[3]])
+
+
+	'''
+	#now this is in DType for all
+	def movJ_def_p(self, pos): #set None to stay in current position movJ_def_p([None,1,2,3]) mean x remain, but y=1 z=2 r=3 		#relative to pivot
+		self.movJ_def(self, pos[0], pos[1], pos[2], pos[3])
+	
 	def posJ_fill_None_w_current(self, j1,j2,j3,j4):		#relative to pivot
 		pos_now=dType.GetPose(api, self.id_)
 		if(j1 is None):
@@ -917,16 +926,14 @@ class DobotState():
 		else:
 			j4+=self.posPivot[3] #relative to pivot r-axis
 		return [j1,j2,j3,j4]
-	def movJ_def_p(self, pos): #set None to stay in current position movJ_def_p([None,1,2,3]) mean x remain, but y=1 z=2 r=3 		#relative to pivot
-		self.movJ_def(self, pos[0], pos[1], pos[2], pos[3])
 	def movJ_def(self, j1,j2,j3,j4): #set None to stay in current position 		#relative to pivot
 		posJ=self.posJ_fill_None_w_current(j1,j2,j3,j4)
 		self.movJ_abs(posJ)
-	
+	'''
 	def cursor_to_pos_selected(self): # TODO from scripts
 		id_=window.id_selected
 		current_pose = dType.GetPose(api, id_)
-		dobotStates[id_].setPosCursorXYZ(current_pose)
+		dobotStates[id_].setPosCursorXYZR(current_pose)
 		
 
 class DobotRailState(): #!!TODO
@@ -1053,21 +1060,22 @@ class WidgetDraw1(QtWidgets.QWidget):
 	def draw1pos_hist(self, qp, pos, pos_hist_n, dobotSt): #TODO draw as always but dimmer. Add on move, del on return btn
 		x=pos[0]
 		y=pos[1]
-		qp.drawEllipse(QPoint(x,y),8,8)
+		
+		x= scale_f(x, xy_scale) +self.cx
+		y=-scale_f(y, xy_scale) +self.cy
+		
+		qp.drawEllipse(QPoint(x,y),6,6)
 		qp.setPen(QPen(QtCore.Qt.black, 1))
-		font = QtGui.QFont("Segoe", 8)
+		font = QtGui.QFont("Segoe", 7)
 		qp.setFont(font)
 		qp.drawText(x-2, y+4, str(pos_hist_n))
 		
 	def draw1pos(self, qp, x, y, z, r, dobotSt, bMarkSelection=False):
-		xyz_str=str(round(x,1))+" "+str(round(y,1))+" "+str(round(z,1))
+		#xyz_str=str(round(x,1))+" "+str(round(y,1))+" "+str(round(z,1))+" "+str(round(r,1)) #before scale
+		xyz_str='{:.0f} {:.0f} {:.0f} {:.1f}'.format(x,y,z,r) #before scale #https://mkaz.blog/code/python-string-format-cookbook/
 		
-		x=scale_f(x, xy_scale)
-		y=-scale_f(y, xy_scale)
-		
-		x+=self.cx
-		y+=self.cy
-		
+		x= scale_f(x, xy_scale) +self.cx
+		y=-scale_f(y, xy_scale) +self.cy
 		
 		z_start_out_of_circle=-25
 		if(z<0):
@@ -1086,7 +1094,7 @@ class WidgetDraw1(QtWidgets.QWidget):
 			qp.drawEllipse(QPoint(x,y),16,16)
 
 		#xyz
-		font = QtGui.QFont("Segoe", 16)
+		font = QtGui.QFont("Segoe", 15)
 		font.setFixedPitch(True)
 		qp.setFont(font)
 		qp.drawText(x+14, y-7, xyz_str)
