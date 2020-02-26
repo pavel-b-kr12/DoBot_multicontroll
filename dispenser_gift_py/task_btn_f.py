@@ -2,42 +2,6 @@ MOV_Relative=7 #to SetPTPCmdEx_mon(api, id_m1, MOV_Relative, x, y, z, rHead, 1)
 MOV_Abs=2
 
 ################################### task_btn_f
-'''
-def t3_m1_get_packet_h():
-	#
-	btn=window.t3_m1_get_packet
-	rID=id_m1
-	tskStart_mark(btn, rID)
-
-
-	rID=id_magL
-	print(rID)
-	dType.SetDeviceWithL(api, rID, 1)
-	dType.SetWAITCmdEx(api, rID, 100, 1)
-	current_pose = dType.GetPose(api, rID)
-	dType.SetPTPWithLCmdEx(api, rID, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 100, 1)
-	dType.SetPTPWithLCmdEx(api, rID, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 130, 1)
-
-	rID=id_m1
-	gripperOpen()
-	
-	current_pose = dType.GetPose(api, rID)
-	dType.SetPTPCmdEx_mon(api, rID, 2, 50,  (-160),  233, 99, 1)
-	current_pose = dType.GetPose(api, rID)
-	dType.SetPTPCmdEx_mon(api, rID, 2, 50,  (-393),  233, 99, 1)
-	dType.SetWAITCmdEx(api, rID, 2000, 1)
-	current_pose = dType.GetPose(api, rID)
-	dType.SetPTPCmdEx_mon(api, rID, 2, 50,  (-393),  200, 99, 1)
-
-
-	
-	gripperClose()
-	
-	#time.sleep(2)
-	tskEnd_mark(btn)
-'''
-
-#################task
 
 '''
 @dataclass
@@ -52,9 +16,8 @@ m1_pos_at_pack = M1_pos_at_pack()
 '''
 
 
-
+import traceback
 def f_nm():
-	import traceback
 	return traceback.extract_stack(None, 2)[0][2]
 
 
@@ -63,7 +26,7 @@ m1_pos_at_pack=[-2.8,-45.88,25.5,37.22+6,1133]
 m1_pos_before_pack=[23,8,-66,25.5,30+6,1133]
 #J angle  movJ( m1_pos_at_pack[0],  m1_pos_at_pack[1],  m1_pos_at_pack[2], m1_pos_at_pack[3]+dobotStates[id_m1].posPivot[3], 1)
 
-m1_pos_pivot=[0,0, 92,None]
+m1_pos_at_pivot=[0,0, 92,None]
 m1_pos_at_mag_site=[180,  (-180),  5, (-10)] #!! must move CCW
 m1_pos_at_pack_dx=-40
 m1_pos_at_pack_Nx=0
@@ -79,7 +42,7 @@ def t0_magR_rail_Home_f():
 	print(f_nm())
 	btn=window.t0_magR_rail_Home
 	#tskStart_mark(btn, id_magR)
-	btnHome_f(id_magR,btn)
+	dobotRailState.dobotSt.home_mon(btn)
 	#tskEnd_mark(btn)
 	queue_put(thread_m1_queue, t01_m1_find_pivot_f)
 	
@@ -95,56 +58,42 @@ def t01_m1_find_pivot_f(): #115.3
 	
 	#move to target pos to set pivot for r-axis
 	dobotRailState.mov(pos_rail_pivot)
-	movJ_def_p(id_m1,[None, None, m1_pos_pivot, None]) #z
-	movJ_def_p(id_m1,m1_pos_pivot)
+	m1.movJ_def_p([None, None, m1_pos_at_pivot, None]) #z
+	m1.movJ_def_p(m1_pos_at_pivot)
 	
-	pos_m1 = dType.GetPose(api, id_m1)
-	print(pos_m1)
-	
-	
+
+	#!@@ TODO replace w dType SetTRIGCmd		#TODO repeat for avg
 	bFIndCCW_incr=-1
-	#rot CCW
-	#check sensor until 1
+	#rot CCW	#check sensor until 1
 	while(True):
 		if(check_packet()): 
 			break
-		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, 2*bFIndCCW_incr, 1)
+		m1.mov_relative(0,  0,  0, 2*bFIndCCW_incr)
 		
-	#rot CW
-	#check sensor until 0
+	#rot CW		#check sensor until 0
 	while(True):
-		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, -1*bFIndCCW_incr, 1)
+		m1.mov_relative(0,  0,  0, -1*bFIndCCW_incr)
 		if(not check_packet()): 
 			break
-	pos_m1 = dType.GetPose(api, id_m1)
-	print(pos_m1)
-	#rot CCW
-	#check sensor until 1
+
+	#rot CCW	#check sensor until 1
 	while(True):
-		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, 0.1*bFIndCCW_incr, 1)
-		#move CCW
-		#dType.SetPTPCmdEx_mon(api, id_m1, MOV_Relative, None, None, None, 1, 1)# move a bit r-axis
-		
-		# check sensor until 1
+		m1.mov_relative(0,  0,  0, 0.1*bFIndCCW_incr)
 		if(check_packet()): 
 			break
 
-	pos_m1 = dType.GetPose(api, id_m1)
-	print("find target at: ",pos_m1[0:4],"  r:", pos_m1[7])
+	pos_m1 = m1.getPos()
+	print("find target at: ",pos_m1)
+	#print("find target at: ",pos_m1[0:4],"  r:", pos_m1[7])
 	
-	#repeat for avg
+	m1.posPivot=dType.GetPose(api, id_m1) #TODO draw it
 	
-	dobotStates[id_m1].posPivot=dType.GetPose(api, id_m1)
-	
-	#out  of pivot to use cartesian XYZ, because can't go for j 0,0 other way then movJ
-	movJ_def_p(id_m1,[-14.221565246582031,	-47.71931838989258,	m1_pos_pivot[2],	15.440947532653809])
-	# dType.SetPTPCmdEx_mon(api, id_m1, 4,	-14.221565246582031,	-47.71931838989258,	90.19998931884766,	15.440947532653809, 1) #movJ
-	# dType.SetPTPCmdEx_mon(api, id_m1, 2,	287.9470520019531,	-225.6269989013672,	90.19998931884766,	-46.499935150146484, 1) #movXYZ
+	# firstly need mov out of pivot to use cartesian XYZ, because can't go for j 0,0 other way then movJ
+	m1.movJ_def(-14.221565246582031,	-47.71931838989258,	None,	15.440947532653809)
 
 	tskEnd_mark(btn)
 	if(bConnectTascs):
 		queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
-	
 
 #=============	
 	
@@ -167,7 +116,7 @@ def t1_m1_pos_at_packet_f():
 
 	# dType.SetPTPCmdEx_mon(api, id_m1, 4,	-25.997215270996094,	-59.63286209106445,	57.712013244628906,	80.47640991210938, 1) #movJ
 	# dType.SetPTPCmdEx_mon(api, id_m1, 2,	195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172, 1) #movXYZ
-	mov(id_m1, [195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172])
+	m1.mov(195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172)
 
 	#movJ(id_m1, [8,  -48,  30, 30.2-20.7]) #m1_pos_before_pack
 	dobotRailState.mov(pos_rail_pivot+(800-638)-m1_pos_at_pack_Nx*175)

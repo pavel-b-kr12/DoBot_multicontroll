@@ -185,7 +185,7 @@ def btn_alarm_check_clear_f(id_, btn):
 	dType.ClearAllAlarmsState(api, id_)
 	
 	print("after clear",dType.GetAlarmsState(api, id_))
-def btnHome_f(id_,btn):
+def btnHome_f(id_,btn=None):
 	if(id_==id_m1): #do not home m1, only clear err !!TODO and goto initial
 		dType.ClearAllAlarmsState(api, id_)
 		return
@@ -829,6 +829,13 @@ class DobotState():
 			dobotRailState=DobotRailState(id_,  self)
 			self.dobotRailState=dobotRailState
 
+	def getPos(self, bRedraw=True):
+		self._lock.acquire()
+		self.pos=dType.GetPose(api, self.id_)
+		self._lock.release()
+		if(bRedraw):
+			widgetDraw1.update()
+	
 	def setPosNow(self, n):
 		self._lock.acquire()
 		#self.pos[0:4]=[n[0],n[1],n[2],n[3],n[4]]
@@ -878,12 +885,26 @@ class DobotState():
 		self._lock.release()
 		widgetDraw1.update()
 	
+	def home_mon(self, btn=None):
+		btnHome_f(self.id_, btn)
+
+	
+	def mov(self, pos):
+		dType.SetPTPCmdEx_mon(api, self.id_, 2, pos[0],  pos[1],  pos[2], pos[3]+self.posPivot[3], 1)	
+	def mov_relative(self, pos):
+		dType.SetPTPCmdEx_mon(api, self.id_, 7, pos[0],  pos[1],  pos[2], pos[3], 1)	
+	def movJ_relative(self, posJ):
+		dType.SetPTPCmdEx_mon(api, self.id_, 6, posJ[0],  posJ[1],  posJ[2], posJ[3], 1)
+	
 	def movJ_abs(self, posJ):
 		dType.SetPTPCmdEx_mon(api, self.id_, 4, pos[0], pos[1], pos[2], pos[3], 1)
-	def movJ(self, posJ):
-		self.movJ_abs(self, [posJ[0],  posJ[1],  posJ[2], posJ[3]+self.posPivot[3]])  #relative to pivot r-axis
 		
-	def posJ_fill_None_w_current(self, j1,j2,j3,j4):
+	def movJ(self, j1,j2,j3,j4):	#relative to pivot r-axis
+		self.movJ_abs(self, [j1,  j2,  j3, j4+self.posPivot[3]]) 
+	def movJp(self, posJ):			#relative to pivot
+		self.movJ(posJ[0],  posJ[1],  posJ[2], posJ[3])
+		
+	def posJ_fill_None_w_current(self, j1,j2,j3,j4):		#relative to pivot
 		pos_now=dType.GetPose(api, self.id_)
 		if(j1 is None):
 			j1=pos_now[4]
@@ -896,20 +917,18 @@ class DobotState():
 		else:
 			j4+=self.posPivot[3] #relative to pivot r-axis
 		return [j1,j2,j3,j4]
-	def movJ_def_p(self, pos):
+	def movJ_def_p(self, pos): #set None to stay in current position movJ_def_p([None,1,2,3]) mean x remain, but y=1 z=2 r=3 		#relative to pivot
 		self.movJ_def(self, pos[0], pos[1], pos[2], pos[3])
-	def movJ_def(self, j1,j2,j3,j4): #set None to stay current
+	def movJ_def(self, j1,j2,j3,j4): #set None to stay in current position 		#relative to pivot
 		posJ=self.posJ_fill_None_w_current(j1,j2,j3,j4)
 		self.movJ_abs(posJ)
-	
 	
 	def cursor_to_pos_selected(self): # TODO from scripts
 		id_=window.id_selected
 		current_pose = dType.GetPose(api, id_)
 		dobotStates[id_].setPosCursorXYZ(current_pose)
 		
-	# def getPos(self):
-		# return self.pos
+
 class DobotRailState(): #!!TODO
 	l=0
 	id_=0
