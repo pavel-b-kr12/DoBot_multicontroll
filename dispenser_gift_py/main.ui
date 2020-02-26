@@ -747,6 +747,18 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="btn_alarm_check_clear_m1">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>status?</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="btnHome_M1">
             <property name="font">
              <font>
@@ -825,6 +837,18 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="btn_alarm_check_clear_magL">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>status?</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="btnHome_MagL">
             <property name="font">
              <font>
@@ -899,6 +923,18 @@
            <widget class="QLabel" name="label_MagR_id">
             <property name="text">
              <string>MagR_id</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_alarm_check_clear_magR">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>status?</string>
             </property>
            </widget>
           </item>
@@ -1179,7 +1215,7 @@
       <item>
        <widget class="QCheckBox" name="checkBox_IR_debug">
         <property name="text">
-         <string>checkBox_IR_debug</string>
+         <string>checkBox_IR_debug = true</string>
         </property>
        </widget>
       </item>
@@ -1187,6 +1223,11 @@
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
          <widget class="QCheckBox" name="checkBox_bex2">
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string>ex2</string>
           </property>
@@ -1194,6 +1235,11 @@
         </item>
         <item>
          <widget class="QCheckBox" name="checkBox_bex3">
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string>ex3</string>
           </property>
@@ -1201,6 +1247,11 @@
         </item>
         <item>
          <widget class="QCheckBox" name="checkBox_bex4">
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string>ex4</string>
           </property>
@@ -1208,6 +1259,11 @@
         </item>
         <item>
          <widget class="QCheckBox" name="checkBox_bex5">
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string>ex5</string>
           </property>
@@ -1215,6 +1271,11 @@
         </item>
         <item>
          <widget class="QCheckBox" name="checkBox_bex6">
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string>ex6</string>
           </property>
@@ -1230,14 +1291,14 @@
             <item>
              <widget class="QLabel" name="label_m1_pos_target">
               <property name="text">
-               <string>target x y z</string>
+               <string>target x y z r</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="label_m1_pos_now">
               <property name="text">
-               <string>now x y z</string>
+               <string>now x y z r</string>
               </property>
              </widget>
             </item>

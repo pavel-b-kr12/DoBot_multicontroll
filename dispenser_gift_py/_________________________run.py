@@ -33,6 +33,7 @@ from threading import Timer
 from functools import partial
 import queue
 import inspect
+from math import *
 
 #from dataclasses import dataclass
 
@@ -123,17 +124,33 @@ def connectDobot(com_nm, id_nm, c, checkbox, label, bRail=False):
 	checkbox.setChecked(id_ != -1)  # TODO mark red if fail connect COM
 	label.setText(str(id_))  # f'{10}'
 	
+
 	onNow=False
 	if id_ > -1:
 		onNow=True
 		dType.SetQueuedCmdClear(api, id_)
 		dType.SetQueuedCmdStartExec(api, id_)
+		dType.ClearAllAlarmsState(api, id_)
+		dType.SetPTPCommonParams(api, id_,40,30,1)  #??Ex #speed, acceleration max is 100, 1000
 	
 	if(id_ == -1):
 		id_=id_default(id_nm) #initial id, for debug or create functions w.o robots
 	
 	dobotStates[id_] = DobotState(id_nm, id_, c, bRail)
 	dobotStates[id_].bOn=onNow
+	'''
+	   
+    dType.SetQueuedCmdClear(api)  #Clean Command Queued
+
+    #Async Motion Params Setting
+    dType.SetHOMEParams(api, 200, 200, 200, 200, isQueued = 1)
+    dType.SetPTPJointParams(api, 200, 200, 200, 200, 200, 200, 200, 200, isQueued = 1)
+    dType.SetPTPCommonParams(api, 100, 100, isQueued = 1)
+
+    dType.SetHOMECmd(api, temp = 0, isQueued = 1)
+	
+	dType.DisconnectDobot(api)
+	'''
 
 	return id_
 			
@@ -158,6 +175,52 @@ def connectCOM(COMName):
 	else:
 		return -1
 
+#===================================================================== GUI
+def btn_alarm_check_clear_f(id_, btn):
+	print(dType.GetAlarmsState(api, id_))
+	#TODO 1st: check AlarmsState, mark color btn, 2nd press if marked red - clear
+	#btn.setStyleSheet("background-color: #00ff00")
+	dType.ClearAllAlarmsState(api, id_)
+	
+	print("after clear",dType.GetAlarmsState(api, id_))
+def btnHome_f(id_,btn):
+	if(id_==id_m1): #do not home m1, only clear err !!TODO and goto initial
+		dType.ClearAllAlarmsState(api, id_)
+		return
+		
+	if(btn is not None):
+		tskStart_mark(btn, id_)
+	dType.ClearAllAlarmsState(api, id_)
+	dType.SetQueuedCmdClear(api, id_)
+	dType.SetHOMECmdEx_mon(api, id_, 1,1)
+	dobotStates[id_].posHome=dType.GetPose(api, id_)
+	#dType.printPos(api, id_,0, 0, 0, 0, True)
+	if(btn is not None):
+		tskEnd_mark(btn)
+	
+
+def btnHome_h(id_,btn):
+	tskMarks_clear_all(False)
+	threading.Thread(target=btnHome_f, args=[id_,btn]).start()
+
+	
+def btnStop_f(id_):
+	tskMarks_clear_all(True)
+	
+	queue_clear(thread_m1_queue)
+	queue_clear(thread_magL_queue)
+	queue_clear(thread_magR_queue)
+	
+	dType.SetQueuedCmdForceStopExec(api, id_)
+	dType.ClearAllAlarmsState(api, id_)
+def queue_clear(q):
+	with q.mutex:
+		q.queue.clear()
+	
+def queue_put(q, f): #TODO2 mark enqueued
+	#print("bStopEnqueue: ", bStopEnqueue)
+	if(not bStopEnqueue):
+		q.put(f)
 #===================================================================== GUI
 bStopEnqueue=False
 
@@ -310,8 +373,6 @@ QPushButton
 """
 
 
-
-
 '''
 """
 	   QPushButton {
@@ -329,7 +390,7 @@ QPushButton
 '''
 #===================================================================== generate GUI
 ffthread_nm_N=0
-#tst
+#tst:
 #dirs = [f for f in os.scandir('.\script') if os.path.isdir(f)]
 #path=dirs[0].path
 #imgs = [os.path.join(path, f) for f in os.listdir(path) if f.endswith((".png",".jpg",".gif"))]
@@ -377,7 +438,6 @@ elem.clicked.connect("""+ffthread_nm+""")
 		#exec("""elem.clicked.connect("""+ffthread_nm+""")""")
 		#elem.clicked.connect(ffthread_nm)
 		break #multiple connect probably cause GUI freeze after click. But all connected to their job
-
 
 """
 	global exe_str
@@ -449,7 +509,6 @@ QPushButton#config_button {
 	btn_order_.setGraphicsEffect( effShadow )
 	btn_order_.setStyleSheet(style_order_btn)
 	return btn_order_
-
 
 '''
 def setIcon(elem, path):
@@ -679,8 +738,6 @@ def convertClipboard(id):
 	
 
 	
-
-
 	funcList.append( funcToUIGen.createAndSave(id, window, nmFunction, str_buf) )
 '''
 def check_clipboard_every2s():
@@ -690,43 +747,6 @@ def check_clipboard_every2s():
 	threading.Timer(3.0, check_clipboard_every2s).start()
 '''		
 
-
-def btnHome_f(id_,btn):
-	if(btn is not None):
-		tskStart_mark(btn, id_)
-	dType.ClearAllAlarmsState(api, id_)
-	dType.SetQueuedCmdClear(api, id_)
-	dType.SetHOMECmdEx_mon(api, id_, 1,1)
-	dobotStates[id_].posHome=dType.GetPose(api, id_)
-	#dType.printPos(api, id_,0, 0, 0, 0, True)
-	if(btn is not None):
-		tskEnd_mark(btn)
-	
-
-def btnHome_h(id_,btn):
-	tskMarks_clear_all(False)
-	threading.Thread(target=btnHome_f, args=[id_,btn]).start()
-
-	
-def btnStop_f(id_):
-	tskMarks_clear_all(True)
-	
-	queue_clear(thread_m1_queue)
-	queue_clear(thread_magL_queue)
-	queue_clear(thread_magR_queue)
-	
-	dType.SetQueuedCmdForceStopExec(api, id_)
-	dType.ClearAllAlarmsState(api, id_)
-def queue_clear(q):
-	with q.mutex:
-		q.queue.clear()
-	
-def queue_put(q, f): #TODO2 mark enqueued
-	#print("bStopEnqueue: ", bStopEnqueue)
-	if(not bStopEnqueue):
-		q.put(f)
-	
-	
 #=====================================================
 
 PTP_mode_xyz_LINEAR=2		
@@ -735,11 +755,18 @@ PTP_mode_J_LINEAR=5
 PTP_mode_J=4	
 #!TODO toggle GUI
 
+import traceback ##!!
 def CopyToClipboard(s):
+	try:
 		win32clipboard.OpenClipboard()
 		win32clipboard.EmptyClipboard()
 		win32clipboard.SetClipboardText( s, win32clipboard.CF_TEXT )
 		win32clipboard.CloseClipboard()
+	except Exception:
+		traceback.print_exc()
+		#print("CloseClipboard")
+		#win32clipboard.CloseClipboard()
+		
 def print_selected_PosNow_copy_movXYZ(pos):
 	s="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_xyz_LINEAR)+",	%1s,	%1s,	%1s,	%1s, 1"%(pos[0],pos[1],pos[2],pos[3])+") #movXYZ\r\n"
 	print("\r\n",s)
@@ -757,9 +784,11 @@ def print_selected_PosNow_copy_movJ(pos, s1=""):
 dobotStates=[None for i in range(9)]
 class DobotState():
 	pos=[0,0,0,0] #now, updates while exec "_mon" move function e.g.:  SetHOMECmdEx_mon
+	pos_hist=[[0,0,0,0], [110,110,10,0]] #!!
 	posCursor=[0,0,0,0] #target, updates on XY plot click or drom some functions that set target before exec move
+	posCursorL=0;
 	posHome=[0,0,0,0] # updates after run btnHome_h
-	posPivot=[0,0,0,-6,1133]
+	posPivot=[0,0,0,-6,0]
 	IODI=[]
 	IOAI=[]
 	bOn=False #Dobot online
@@ -772,8 +801,8 @@ class DobotState():
 		self.id_=id_
 		if(bDebug):
 			print ("init", nm, id_)
-		self.pos=[id_*30,0,0]
-		self.posCursor=[0,id_*30,0]
+		self.pos=[id_*30,0,0,0]
+		self.posCursor=[0,id_*30,0,0]
 		self.bRail=bRail
 		if(bRail):
 			bRail_now=dType.GetDeviceWithL(api, id_)[0]
@@ -781,7 +810,7 @@ class DobotState():
 				print("dobot id: ",id_, " already connected Rail")
 			else:
 				dType.SetDeviceWithL(api, id_,  True)
-				print(dType.GetDeviceWithL(api, id_))
+				print("connecting rail...", id_nms_default[id_], dType.GetDeviceWithL(api, id_))
 				time.sleep(0.5)  #!del
 				print(dType.GetDeviceWithL(api, id_))
 			global dobotRailState
@@ -821,10 +850,29 @@ class DobotState():
 		self.posCursor[2]+=dz
 		self._lock.release()
 		widgetDraw1.update()
+	def incrPosCursorR(self, dr):
+		self._lock.acquire()
+		self.posCursor[3]+=dr
+		self._lock.release()
+		widgetDraw1.update()
+	def incrPosCursorLRail(self, L):
+		self._lock.acquire()
+		self.posCursorL+=L
+		if( self.posCursorL <0 ):
+			self.posCursorL=0
+		elif( self.posCursorL >999 ):
+			self.posCursorL=999
+		self._lock.release()
+		widgetDraw1.update()
+		
+	def cursor_to_pos_selected(self): # TODO from scripts
+		id_=window.id_selected
+		current_pose = dType.GetPose(api, id_)
+		dobotStates[id_].setPosCursorXYZ(current_pose)
 		
 	# def getPos(self):
 		# return self.pos
-class DobotRailState():
+class DobotRailState(): #!!TODO
 	l=0
 	id_=0
 	_lock = threading.Lock()
@@ -851,7 +899,8 @@ dobotRailState=None  #TODO multiple. But currently we have 1
 from PySide2.QtCore import Qt
 
 class WidgetDraw1(QtWidgets.QWidget):
-	
+	cx=0 #center of widget
+	cy=0
 	def __init__(self):
 		super(WidgetDraw1, self).__init__()
 		
@@ -869,20 +918,31 @@ class WidgetDraw1(QtWidgets.QWidget):
 		
 		xywh=self.rect() 	#widget			#cent=self.geometry().center() #window
 		cent=xywh.center() 
+		#self.cent=cent
+		self.xywh=xywh
 		self.cx=cent.x()
 		self.cy=cent.y()
-		qp.drawLine(QPointF(0, self.cy), QPointF(xywh.width(), self.cy)) #center cross lines
-		qp.drawLine(QPointF(self.cx, 0), QPointF(self.cx, xywh.height()))
+		qp.drawLine(QPointF(0, self.cy), QPointF(xywh.width(), self.cy)) #w #center cross lines
+		qp.drawLine(QPointF(self.cx, 0), QPointF(self.cx, xywh.height())) #h
 		
 		self.drawPoints(qp)
 		
 		qp.end()
 	
 	def drawPoints(self, qp):
-		for i in range(9):
-			dobotSt=dobotStates[i]
+		
+		
+		for dobotSt in dobotStates:
 			if(dobotSt == None):
+				#print("!") #?? why empty exist
 				continue
+				
+			pos_hist_n=0
+			for pos in dobotSt.pos_hist:
+				qp.setPen(QPen(QtCore.Qt.white, 1))
+				self.draw1pos_hist(qp, pos, pos_hist_n, dobotSt) #now history
+				pos_hist_n+=1
+				
 			pos=dobotSt.pos
 			posCursor=dobotSt.posCursor
 			#print(i)
@@ -893,14 +953,27 @@ class WidgetDraw1(QtWidgets.QWidget):
 				qp.setBrush(dobotSt.color)
 				#qp.setBrush(Qt.transparent)
 				qp.setPen(QPen(QtCore.Qt.red, 2))
-				self.draw1pos(qp, pos[0], pos[1], pos[2], dobotSt) #now
+				self.draw1pos(qp, pos[0], pos[1], pos[2], pos[3], dobotSt) #now
 			if(len(posCursor)>2):
 				qp.setPen(QPen(dobotSt.color, 2))
 				qp.setBrush(dobotSt.color)
-				self.draw1pos(qp, posCursor[0], posCursor[1], posCursor[2], dobotSt, i == window.id_selected) #target	
+				self.draw1pos(qp, posCursor[0], posCursor[1], posCursor[2], posCursor[3], dobotSt, dobotSt.id_ == window.id_selected) #target
+			if(dobotSt.bRail):
+				qp.setPen(QPen(dobotSt.color, 2))
+				xend=self.xywh.width()-50
+				y=self.cy-10
+				qp.drawLine(QPointF(xend-dobotSt.posCursorL, y), QPointF(xend, y)) 
 			
-
-	def draw1pos(self, qp, x, y, z, dobotSt, bMarkSelection=False):
+	def draw1pos_hist(self, qp, pos, pos_hist_n, dobotSt): #TODO draw as always but dimmer. Add on move, del on return btn
+		x=pos[0]
+		y=pos[1]
+		qp.drawEllipse(QPoint(x,y),8,8)
+		qp.setPen(QPen(QtCore.Qt.black, 1))
+		font = QtGui.QFont("Segoe", 8)
+		qp.setFont(font)
+		qp.drawText(x-2, y+4, str(pos_hist_n))
+		
+	def draw1pos(self, qp, x, y, z, r, dobotSt, bMarkSelection=False):
 		xyz_str=str(round(x,1))+" "+str(round(y,1))+" "+str(round(z,1))
 		
 		x=scale_f(x, xy_scale)
@@ -909,8 +982,16 @@ class WidgetDraw1(QtWidgets.QWidget):
 		x+=self.cx
 		y+=self.cy
 		
-		qp.drawLine(QPointF(x, y), QPointF(x, y-scale_f(z,0.95)))
 		
+		z_start_out_of_circle=-25
+		if(z<0):
+			z_start_out_of_circle=-z_start_out_of_circle
+		yz_start=y+z_start_out_of_circle
+		qp.drawLine(QPointF(x, yz_start), QPointF(x, yz_start-scale_f(z,0.95))) #z
+		
+		
+		r=radians(r)
+		qp.drawLine(QPointF(x, y), QPointF(x+sin(r)*20, y+cos(r)*20)) #r
 		
 		#qp.setPen(QPen(Qt.red, 2))
 		qp.drawEllipse(QPoint(x,y),10,10) # draw https://doc.qt.io/qtforpython/PySide2/QtGui/QPainter.html#PySide2.QtGui.PySide2.QtGui.QPainter.drawEllipse
@@ -970,7 +1051,19 @@ class WidgetDraw1(QtWidgets.QWidget):
 		#self.update()
 	def wheelEvent(self, event):
 		if(dobotStates[window.id_selected] is not None):
-			dobotStates[window.id_selected].incrPosCursorZ(event.delta()/60)
+			d_div=60
+			if( Key.alt_l in class1.keys):
+				d_div=6
+			if( Key.alt_r in class1.keys):
+				d_div=240
+			d=event.delta()/d_div
+			
+			if Key.ctrl_l in class1.keys :
+				dobotStates[window.id_selected].incrPosCursorR(d)
+			elif Key.shift in class1.keys :
+				dobotStates[window.id_selected].incrPosCursorLRail(d)
+			else:
+				dobotStates[window.id_selected].incrPosCursorZ(d)
 		event.accept()
 		#self.update()
 
@@ -1004,8 +1097,10 @@ if __name__ == "__main__":
 	ui_file.close()
 	
 	dType.window=window #for monitor xyz
+	window.dType=dType
 	window.id_selected=0 ###!! move to dType
 	window.id_nms_default=id_nms_default
+	window.dobotStates=dobotStates
 	dType.dobotStates=dobotStates
 
 	window.checkBox_ConnectAll.stateChanged.connect(checkBox_ConnectAll_click)
@@ -1031,6 +1126,10 @@ if __name__ == "__main__":
 	window.btnStop_M1.clicked.connect(partial(btnStop_f,id_m1))
 	window.btnStop_MagL.clicked.connect(partial(btnStop_f,id_magL))
 	window.btnStop_MagR.clicked.connect(partial(btnStop_f,id_magR))
+	
+	window.btn_alarm_check_clear_m1.clicked.connect  (partial(btn_alarm_check_clear_f,id_m1,   window.btn_alarm_check_clear_m1))
+	window.btn_alarm_check_clear_magL.clicked.connect(partial(btn_alarm_check_clear_f,id_magL, window.btn_alarm_check_clear_magL))
+	window.btn_alarm_check_clear_magR.clicked.connect(partial(btn_alarm_check_clear_f,id_magR, window.btn_alarm_check_clear_magR))
 	
 	window.btn_convertClipboard_m1.clicked.connect(partial(convertClipboard,'m1')) #! or id_m1 if failed to exec "id='id_m1'"
 	window.btn_convertClipboard_magL.clicked.connect(partial(convertClipboard,'magL'))

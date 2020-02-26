@@ -1,4 +1,4 @@
 nmFunction = 'sys_print_pos_id_selected'id_=window.id_selected 
 
-pos=dType.printPosNow(api, id_, True) # it also dobotStates[id_].setPos#pos=GetPose(api, window.id_selected)s=print_selected_PosNow_copy_movXYZ(pos)print_selected_PosNow_copy_movJ(pos,s)#print("dobotStates[id_]: ",dobotStates[id_].pos)#dType.SetPTPCmdEx_mon(api, id_, 7, 0,  10,  0, 0, 1)
+pos=dType.printPosNow(api, id_, True) # it also dobotStates[id_].setPospos[3]-=dobotStates[id_].posPivot[3] #3 and 7 is r-axis , substract relative to pivotpos[7]-=dobotStates[id_].posPivot[3]s=print_selected_PosNow_copy_movXYZ(pos)print_selected_PosNow_copy_movJ(pos,s)#print("dobotStates[id_]: ",dobotStates[id_].pos)#dType.SetPTPCmdEx_mon(api, id_, 7, 0,  10,  0, 0, 1)
 #print("dobotStates[id_]: ",dobotStates[id_].pos)

@@ -58,7 +58,7 @@ def f_nm():
 	return traceback.extract_stack(None, 2)[0][2]
 
 
-def movJ(id_, posJ):
+def movJ(id_, posJ): #relative to pivot r-axis
 	print("posJ:",posJ)
 	dType.SetPTPCmdEx_mon(api, id_, 4, posJ[0],  posJ[1],  posJ[2], posJ[3]+dobotStates[id_].posPivot[3], 1)
 	print("now:",dType.GetPose(api, id_))
@@ -112,13 +112,15 @@ def t01_m1_find_pivot():
 	tskMarks_clear_all(False)
 	queue_put(thread_magR_queue, t01_m1_find_pivot_f)
 def t01_m1_find_pivot_f():
+	##!!if pos at pack - move before pack 
 	print(f_nm())
 	btn=window.t01_m1_find_pivot
 	tskStart_mark(btn, id_magR)
 	
 	#move to target pos
 	movRail(id_magR, pos_rail_pivot)
-	movJ_def(id_m1, None,None, 84,None) #z 37
+	#movJ_def(id_m1, None,None, 84,None) #z 37
+	movJ_def(id_m1, 0,0, 84,None) #z 37
 	
 	pos_m1 = dType.GetPose(api, id_m1)
 	print(pos_m1)
@@ -176,29 +178,11 @@ def t1_m1_pos_at_packet_f():
 	tskStart_mark(btn, id_m1)
 	
 	dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
-
-
-	movJ( 1,  (-47),  27, (rP + (33 - r0)))
-	movJ( 1,  (-47),  228, (rP + (33 - r0)))
-	movJ( 57,  (-73),  228, (rP + (24 - r0)))
-	movJ( 77,  (-85),  195, (rP + (0 - r0)))
-
-
-
-	movJ( 1,  (-47),  27, (rP + (33 - r0)))
-	movJ( 1,  (-47),  228, (rP + (33 - r0)))
-	movJ( 57,  (-73),  228, (rP + (24 - r0)))
-	movJ( 77,  (-85),  195, (rP + (0 - r0)))
-	movJ( 74,  (-33),  195, (rP + (46 - r0)))
-	movJ( 74,  (-33),  146, (rP + (46 - r0)))
-	movJ( 74,  (-11),  146, (rP + (18 - r0)))
-	movJ( 74,  (-80),  220, (rP + (18 - r0)))
-
-
-	movJ(id_m1,[3,  (-48),  27, 31]) #m1_pos_before_pack
-	movRail(id_magR, pos_rail_pivot-m1_pos_at_pack_Nx*180)
-	movJ(id_m1,[-14,  (-25),  27, 31]) #m1_pos_at_pack at this pos sensor can check, and Z up can pick packet. But cant move Y
-
+	
+	movJ(id_m1, [8,  -48,  30, 30.2-20.7]) #m1_pos_before_pack
+	movRail(id_magR, pos_rail_pivot-m1_pos_at_pack_Nx*175)
+	movJ(id_m1, [-4.5, -35, 30, 30.2-20.7] ) #check
+	#movJ(id_m1,[-14,  (-25),  27, 31]) #m1_pos_at_pack at this pos sensor can check, and Z up can pick packet. But cant move Y
 	
 	#print(dobotStates[id_m1])
 	#print(dobotStates[id_m1].posPivot[3])
@@ -290,7 +274,7 @@ def t3_m1_get_packet_f():
 	tskStart_mark(btn, id_m1)
 
 	movJ(id_m1,[-9.495, -41,	228,	38.96]) #pack get
-	
+	'''
 	movJ(id_m1,[38.7,	-75.1,	228,	27.8]) #move
 	movJ(id_m1,[56.8,	-84.6,	228,	22]) #
 	movJ(id_m1,[84,		-81.6,	228,	-2]) #
@@ -310,7 +294,7 @@ def t3_m1_get_packet_f():
 	#move rail
 	current_pose = dType.GetPose(api, id_magR)
 	dType.SetPTPWithLCmdEx(api, id_magR, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], pos_rail_pivot, 1)
-	
+	'''
 
 	#print_state_id(id_m1)
 
@@ -332,10 +316,33 @@ def t4_m1_packet_to_mag_site_f():
 	btn=window.t4_m1_packet_to_mag_site
 	tskStart_mark(btn, id_m1)
 	
-	print("working long t4_m1_packet_to_mag_site_f")
-	dType.SetPTPCmdEx_mon(api, id_m1, 2, m1_pos_at_mag_site[0],  m1_pos_at_mag_site[1],  m1_pos_at_mag_site[2],  m1_pos_at_mag_site[3], 1)
-	print_state_id(id_m1)
-	time.sleep(2) ####
+	#get packet TODO slower pick
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	-9.494999885559082,	-41.0,	228.0,	38.959999084472656, 1) #movJ
+	dType.SetPTPCmdEx_mon(api, id_m1, 2,	324.4891052246094,	-187.30612182617188,	228.0,	-11.535000801086426, 1) #movXYZ
+
+	#move w packet
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	9.548895835876465,	-60.791259765625,	228.0,	39.707359313964844, 1) #movJ
+	dType.SetPTPCmdEx_mon(api, id_m1, 2,	322.4343566894531,	-122.78236389160156,	228.0,	-11.535004615783691, 1) #movXYZ
+
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	38.217063903808594,	-83.2728042602539,	228.0,	33.52074432373047, 1) #movJ
+	dType.SetPTPCmdEx_mon(api, id_m1, 2,	298.4182434082031,	-17.83038902282715,	228.0,	-11.534996032714844, 1) #movXYZ
+
+	current_pose = dType.GetPose(api, id_magR)
+	dType.SetPTPWithLCmdEx(api, id_magR, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 550, 1)
+
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	55.90485382080078,	-29.299684524536133,	230,	-11.439573287963867, 1) #movJ
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	55.90485382080078,	-29.299684524536133,	230,	70-20.7, 1) #movJ
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	71.00940704345703,	-30.350120544433594,	230,	56.18449783325195, 1) #movJ
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	71.00940704345703,	-30.350130081176758,	230,	56.18450164794922, 1) #movJ
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	50,	4,	230,	24.7-20.7, 1) #movJ
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	50,	4,	150,	24.7-20.7, 1) #movJ drop
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	64,	11,	150,	27.7-20.7, 1) #movJ out
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	64,	11,	200,	27.7-20.7, 1) #movJ out
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	40,	-28,200,	27.7-20.7, 1) #movJ ret
+	
+	#print("working long t4_m1_packet_to_mag_site_f")
+	#time.sleep(2) ####
+	#print_state_id(id_m1)
 
 
 	

@@ -1,0 +1,6 @@
+nmFunction = 'mov_to_cursor_selected'id_=window.id_selectedprint("id_: ", id_)
+current_pose = dType.GetPose(api, id_)
+
+dType.SetPTPCmdEx_mon(api, id_, 2, dobotStates[id_].posCursor[0],  dobotStates[id_].posCursor[1],  dobotStates[id_].posCursor[2], current_pose[3], 1)
+
+#print("dobotStates[id_] cursor: ",dobotStates[id_].posCursor)

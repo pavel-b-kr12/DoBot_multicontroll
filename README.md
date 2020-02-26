@@ -12,16 +12,18 @@ Press F1 for key map
 
 
 ### TODO
-test clipboard
 
-sw xyz/J
+* 🐛 fix stop cause cant resume
+
+* fix clipboard deny error
+
+* sw xyz/J
+* convert xyz/J 2F^
 
 - [ ] ctrl+wheel change r-axis
 - [ ] shift+wheel change rail L
 - [ ] draw that
 
-
-rail pos controls
 save rail at off
 
 - [x] ask about function to check whether the next movement is good or will lead to error
@@ -44,7 +46,6 @@ print( get_distance_to_move_Rail_from_which_NextPosPossible(api, dobotId, xyz_no
  
 ### install python libraries for Windows:
 pip install PySide2
-pip install pywin32
 pip install pyserial
 pip install pynput
 pip install colorama

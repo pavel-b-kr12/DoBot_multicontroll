@@ -11,36 +11,36 @@
 		parentElem=window.verticalLayout_magR
 '''
 class class1: #hold for global access from threads
-   key=None
-   window=None
-   bShow_verticalLayoutWidget_debug=True
-   bShow_verticalLayoutWidget_help=False
-   bShow_verticalLayout_manualControl_=False
-   bFullScreen=False
-   def toggle_FullScreen():
-      class1.bFullScreen=not class1.bFullScreen
-      if class1.bFullScreen:
-         class1.window.showFullScreen()
-      else:
-         class1.window.showNormal()
-   def toggle_helpView():
-      class1.bShow_verticalLayoutWidget_help=not class1.bShow_verticalLayoutWidget_help
-      if class1.bShow_verticalLayoutWidget_help:
-         class1.window.verticalLayout_help_.show()
-      else:
-         class1.window.verticalLayout_help_.hide()
-   def toggle_debugView():
-      class1.bShow_verticalLayoutWidget_debug=not class1.bShow_verticalLayoutWidget_debug
-      if class1.bShow_verticalLayoutWidget_debug:
-         class1.window.verticalLayout_debug_2.show()
-      else:
-         class1.window.verticalLayout_debug_2.hide()
-   def toggle_manualControl():
-      class1.bShow_verticalLayout_manualControl_=not class1.bShow_verticalLayout_manualControl_
-      if class1.bShow_verticalLayout_manualControl_:
-         class1.window.verticalLayout_manualControl_.show()
-      else:
-         class1.window.verticalLayout_manualControl_.hide()
+	keys=[] #all keys pressing now
+	window=None
+	bShow_verticalLayoutWidget_debug=True
+	bShow_verticalLayoutWidget_help=False
+	bShow_verticalLayout_manualControl_=False
+	bFullScreen=False
+	def toggle_FullScreen():
+		class1.bFullScreen=not class1.bFullScreen
+		if class1.bFullScreen:
+			class1.window.showFullScreen()
+		else:
+			class1.window.showNormal()
+	def toggle_helpView():
+		class1.bShow_verticalLayoutWidget_help=not class1.bShow_verticalLayoutWidget_help
+		if class1.bShow_verticalLayoutWidget_help:
+			class1.window.verticalLayout_help_.show()
+		else:
+			class1.window.verticalLayout_help_.hide()
+	def toggle_debugView():
+		class1.bShow_verticalLayoutWidget_debug=not class1.bShow_verticalLayoutWidget_debug
+		if class1.bShow_verticalLayoutWidget_debug:
+			class1.window.verticalLayout_debug_2.show()
+		else:
+			class1.window.verticalLayout_debug_2.hide()
+	def toggle_manualControl():
+		class1.bShow_verticalLayout_manualControl_=not class1.bShow_verticalLayout_manualControl_
+		if class1.bShow_verticalLayout_manualControl_:
+			class1.window.verticalLayout_manualControl_.show()
+		else:
+			class1.window.verticalLayout_manualControl_.hide()
 
 
 
@@ -76,31 +76,38 @@ keyboard = Controller()
 
 
 def on_press(key):  #https://pythonhosted.org/pynput/keyboard.html#monitoring-the-keyboard
-	pass
+	if( not (key in class1.keys) ):
+		class1.keys.append(key)
+	#print(class1.keys)
 	#print('{0} pressed'.format(key))
 
 def mov_rel_x_10_sel():
-	id_=window.id_selected 
-	dType.SetPTPCmdEx_mon(api, id_, 7, 10,  0,  0, 0, 1)
+	id_=class1.window.id_selected 
+	class1.window.dType.SetPTPCmdEx_mon(api, id_, 7, 10,  0,  0, 0, 1)
 def mov_rel_xn_10_sel():
-	id_=window.id_selected 
-	dType.SetPTPCmdEx_mon(api, id_, 7, -10,  0,  0, 0, 1)	
+	id_=class1.window.id_selected 
+	class1.window.dType.SetPTPCmdEx_mon(api, id_, 7, -10,  0,  0, 0, 1)	
 
-def mov_rel_r_10_sel():
-	id_=window.id_selected 
-	dType.SetPTPCmdEx_mon(api, id_, 7, 0,  0,  0, 5, 1)
-def mov_rel_rn_10_sel():
-	id_=window.id_selected 
-	dType.SetPTPCmdEx_mon(api, id_, 7, 0,  0,  0, -5, 1)	
+def mov_rel_r_5_sel():
+	id_=class1.window.id_selected 
+	class1.window.dType.SetPTPCmdEx_mon(api, id_, 7, 0,  0,  0, 5, 1)
+def mov_rel_rn_5_sel():
+	id_=class1.window.id_selected 
+	class1.window.dType.SetPTPCmdEx_mon(api, id_, 7, 0,  0,  0, -5, 1)	
 
 def on_release(key):
-	print(key, end="") #key.vk - for numpad
+	print(key)
+	'''
+	print(key, end="")
 	if(hasattr(key, 'vk')):
-		print(" ", key.vk) #key.vk - for numpad
+		print(" ", key.vk) #key.vk - for numpad. also .KeyCode
 	else:
 		print()
+	'''
 	
-	class1.key=key
+	if( key in class1.keys ):
+		class1.keys.remove(key)
+		#print(class1.keys)
 	
 	if(key==Key.left):
 		mov_rel_x_10_sel()
@@ -110,7 +117,21 @@ def on_release(key):
 	if(key==Key.delete):
 		mov_rel_r_5_sel()		
 	if(key==Key.delete):
-		mov_rel_rn_5_sel()
+		mov_rel_rn_5_sel()	
+
+
+	if(key==Key.backspace):
+		#for i in range(9):
+		#	dobotSt=class1.window.dobotStates[i]
+		dobotSt=class1.window.dobotStates[class1.window.id_selected]
+		#if(dobotSt == None):
+		#	continue
+		print(dobotSt.pos_hist)
+		try:
+			dobotSt.pos_hist.pop() 
+		except:
+			pass
+				
 	
 	'''
 	Key.left
@@ -126,6 +147,13 @@ def on_release(key):
 	
 	Key.end
 	Key.home
+	
+	Key.ctrl_l
+	Key.shift
+	Key.shift_r
+	Key.space
+	
+	Key.backspace
 	
 	'''
 	
@@ -156,6 +184,9 @@ def on_release(key):
 	'''
 
 	'''
+	
+	if key == KeyCode.from_char('c'):
+		class1.window.dobotStates[0].cursor_to_pos_selected()
 		
 	if key == KeyCode.from_char('p'):
 		pass
