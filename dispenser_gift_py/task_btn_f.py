@@ -58,38 +58,6 @@ def f_nm():
 	return traceback.extract_stack(None, 2)[0][2]
 
 
-def movJ(id_, posJ): #relative to pivot r-axis
-	movJ_abs(id_, [posJ[0],  posJ[1],  posJ[2], posJ[3]+dobotStates[id_].posPivot[3]])
-def posJ_fill_None_w_current(id_, j1,j2,j3,j4):
-	pos_now=dType.GetPose(api, id_)
-	if(j1 is None):
-		j1=pos_now[4]
-	if(j2 is None):
-		j2=pos_now[5]
-	if(j3 is None):
-		j3=pos_now[6]
-	if(j4 is None):
-		j4=pos_now[7]
-	else:
-		j4+=dobotStates[id_].posPivot[3] #relative to pivot r-axis
-	return [j1,j2,j3,j4]
-
-def movJ_abs(id_, pos):
-	dType.SetPTPCmdEx_mon(api, id_, 4, pos[0], pos[1], pos[2], pos[3], 1)
-	#print("now:",dType.GetPose(api, id_))
-def movJ_def_p(id_, pos):
-	movJ_def(id_, pos[0], pos[1], pos[2], pos[3])
-def movJ_def(id_, j1,j2,j3,j4): #set None to stay current
-	posJ=posJ_fill_None_w_current(id_, j1,j2,j3,j4)
-	movJ_abs(id_, posJ)
-	
-def movRail(id_, L):
-	movRail_id(id_rail, L)
-def movRail_id(id_, L):
-	current_pose = dType.GetPose(api, id_)
-	#dType.SetPTPLParamsEx(api, id_,200,30,1)
-	dType.SetPTPWithLCmdEx(api, id_, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], L, 1)
-	
 	
 m1_pos_at_pack=[-2.8,-45.88,25.5,37.22+6,1133]
 m1_pos_before_pack=[23,8,-66,25.5,30+6,1133]

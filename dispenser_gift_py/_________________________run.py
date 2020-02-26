@@ -103,10 +103,13 @@ def connectDobots():
 	global id_m1 #also in dobotStates[id_m1]
 	global id_magL
 	global id_magR
+	global m1
+	global magL
+	global magR
 
-	id_m1=connectDobot("COM3", "m1", QColor(0,111,255,166), window.checkBox_M1, window.label_M1_id) #0   # QtCore.Qt.green QColor(0, 0, 255) Qt.darkYellow
-	id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id, True) #1 # rail connected
-	id_magR=connectDobot("COM17", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id)  #2 
+	m1,id_m1=connectDobot("COM3", "m1", QColor(0,111,255,166), window.checkBox_M1, window.label_M1_id) #0   # QtCore.Qt.green QColor(0, 0, 255) Qt.darkYellow
+	magL,id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id, True) #1 # rail connected
+	magR,id_magR=connectDobot("COM17", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id)  #2 
 	
 
 id_nms_default=["id_m1","id_magL","id_magR"] # for 0, 1 , 2
@@ -151,7 +154,7 @@ def connectDobot(com_nm, id_nm, c, checkbox, label, bRail=False):
 	dType.DisconnectDobot(api)
 	'''
 
-	return id_
+	return dobotStates[id_], id_
 			
 def disconnectDobots():
 	global id_m1
@@ -299,11 +302,15 @@ def btn_redraw_end(btn):
 #==================== fill btns
 fill=100 # global setting that can be set with left bar in GUI
 
+def setSpeed(val):
+	if(m1.bOn):
+		dType.SetPTPCommonParams(api, id_m1, 60*val/100, 30*val/100, 1) #DOTO all dobots
 def btn_fill_redraw():
 	window.btn_fill10.setStyleSheet(style_fill_btn)
 	window.btn_fill50.setStyleSheet(style_fill_btn)
 	window.btn_fill100.setStyleSheet(style_fill_btn)
 	window.btn_fill110.setStyleSheet(style_fill_btn)
+	setSpeed(fill)
 
 def btn_fill_redraw_selected(btn):
 	btn.setStyleSheet(style_fill_btn_selected)
@@ -870,7 +877,32 @@ class DobotState():
 			self.posCursorL=999
 		self._lock.release()
 		widgetDraw1.update()
+	
+	def movJ_abs(self, posJ):
+		dType.SetPTPCmdEx_mon(api, self.id_, 4, pos[0], pos[1], pos[2], pos[3], 1)
+	def movJ(self, posJ):
+		self.movJ_abs(self, [posJ[0],  posJ[1],  posJ[2], posJ[3]+self.posPivot[3]])  #relative to pivot r-axis
 		
+	def posJ_fill_None_w_current(self, j1,j2,j3,j4):
+		pos_now=dType.GetPose(api, self.id_)
+		if(j1 is None):
+			j1=pos_now[4]
+		if(j2 is None):
+			j2=pos_now[5]
+		if(j3 is None):
+			j3=pos_now[6]
+		if(j4 is None):
+			j4=pos_now[7]
+		else:
+			j4+=self.posPivot[3] #relative to pivot r-axis
+		return [j1,j2,j3,j4]
+	def movJ_def_p(self, pos):
+		self.movJ_def(self, pos[0], pos[1], pos[2], pos[3])
+	def movJ_def(self, j1,j2,j3,j4): #set None to stay current
+		posJ=self.posJ_fill_None_w_current(j1,j2,j3,j4)
+		self.movJ_abs(posJ)
+	
+	
 	def cursor_to_pos_selected(self): # TODO from scripts
 		id_=window.id_selected
 		current_pose = dType.GetPose(api, id_)
@@ -905,16 +937,24 @@ class DobotRailState(): #!!TODO
 	def mov_ex(self, l): #wait untill end
 		#TODO
 		self.l=l
-	def mov_relative(self, l):	
+	def mov_relative(self, l):	#TODO  now PosCursorL can't be negative in incrPosCursorLRail
 		#TODO
-		pass
+		id_=self.id_
+		current_pose = dType.GetPose(api, id_)
+		dType.SetPTPWithLCmdEx(api, id_, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], self.getL(False)+l, 1)
+
 	def mov(self, l): #non-blocking so can use from UI without new thread 
 		id_=self.id_
 		current_pose = dType.GetPose(api, id_)
 		#dType.SetPTPLParamsEx(api, id_,50,30,1)
 		dType.SetPTPWithLCmdEx(api, id_, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], l, 1)
+	def mov_to_cursor(self, l): #non-blocking so can use from UI without new thread  #TODO mov_to_cursor all together xyzrL
+		id_=self.id_
+		current_pose = dType.GetPose(api, id_)
+		#dType.SetPTPLParamsEx(api, id_,50,30,1)
+		dType.SetPTPWithLCmdEx(api, id_, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], self.dobotSt.posCursorL, 1)
+		
 
-		pass
 	#def setCursor(l):
 	#	pass
 dobotRailState=None  #TODO multiple. But currently we have 1
