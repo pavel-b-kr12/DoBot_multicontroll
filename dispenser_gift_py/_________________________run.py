@@ -105,8 +105,8 @@ def connectDobots():
 	global id_magR
 
 	id_m1=connectDobot("COM3", "m1", QColor(0,111,255,166), window.checkBox_M1, window.label_M1_id) #0   # QtCore.Qt.green QColor(0, 0, 255) Qt.darkYellow
-	id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id) #1
-	id_magR=connectDobot("COM16", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id, bRail=True)  #2 # rail connected
+	id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id, True) #1 # rail connected
+	id_magR=connectDobot("COM17", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id)  #2 
 	
 
 id_nms_default=["id_m1","id_magL","id_magR"] # for 0, 1 , 2
@@ -124,7 +124,6 @@ def connectDobot(com_nm, id_nm, c, checkbox, label, bRail=False):
 	checkbox.setChecked(id_ != -1)  # TODO mark red if fail connect COM
 	label.setText(str(id_))  # f'{10}'
 	
-
 	onNow=False
 	if id_ > -1:
 		onNow=True
@@ -793,16 +792,23 @@ class DobotState():
 	IOAI=[]
 	bOn=False #Dobot online
 	bRail=False
-	
+	dobotRailState=None
 	_lock = threading.Lock()
 	def __init__(self, nm, id_, c, bRail=False):
 		self.color=c
 		self.nm=nm
 		self.id_=id_
-		if(bDebug):
+		if(bDebug or not self.bOn):
 			print ("init", nm, id_)
-		self.pos=[id_*30,0,0,0]
-		self.posCursor=[0,id_*30,0,0]
+			self.pos=[id_*30,0,0,0]
+			self.posCursor=[0,id_*30,0,0]
+		else:
+			self.pos=dType.GetPose(api, id_)
+			self.posCursor=self.pos #  setPosCursorXYZ(self.pos)
+		
+		
+		#print(dType.GetDeviceWithL(api, id_)) #?!TODO F^ always True at start
+		#bRail=dType.GetDeviceWithL(api, id_)[0]
 		self.bRail=bRail
 		if(bRail):
 			bRail_now=dType.GetDeviceWithL(api, id_)[0]
@@ -810,11 +816,11 @@ class DobotState():
 				print("dobot id: ",id_, " already connected Rail")
 			else:
 				dType.SetDeviceWithL(api, id_,  True)
+				time.sleep(0.1)  #!del
 				print("connecting rail...", id_nms_default[id_], dType.GetDeviceWithL(api, id_))
-				time.sleep(0.5)  #!del
-				print(dType.GetDeviceWithL(api, id_))
 			global dobotRailState
-			dobotRailState=DobotRailState(id_)	
+			dobotRailState=DobotRailState(id_,  self)
+			self.dobotRailState=dobotRailState
 
 	def setPosNow(self, n):
 		self._lock.acquire()
@@ -855,7 +861,7 @@ class DobotState():
 		self.posCursor[3]+=dr
 		self._lock.release()
 		widgetDraw1.update()
-	def incrPosCursorLRail(self, L):
+	def incrPosCursorLRail(self, L): #!!TODO DobotRailState l posCursorL
 		self._lock.acquire()
 		self.posCursorL+=L
 		if( self.posCursorL <0 ):
@@ -876,19 +882,38 @@ class DobotRailState(): #!!TODO
 	l=0
 	id_=0
 	_lock = threading.Lock()
-	
-	def __init__(self,id_):
+	dobotSt=None
+	def __init__(self,id_, dobotSt):
+		self.dobotSt=dobotSt
+		print('rail id_:', id_, id_nms_default[id_])
+		if(not bDebug  and self.dobotSt.bOn):
+			print(' rail L:', dType.GetPoseL(api,id_))
 		self.id_=id_
-	def getL():
+		#self.mov(500) #test
+		#print('rail L:', dType.GetPoseL(api,id_))
+		#self.mov(600) #test
+		#print('rail L:', dType.GetPoseL(api,id_))
+
+	def getL(self, bRedraw=True):
 		self._lock.acquire()
-		self.l=dType.GetPoseL(api, self.id_)
+		if(self.dobotSt.bOn): #!TODO move check to dType
+			self.l=dType.GetPoseL(api, self.id_)
 		self._lock.release()
-		widgetDraw1.update()
+		if(bRedraw):
+			widgetDraw1.update()
 		return self.l
-	def mov_ex(l): #wait untill end
-	
+	def mov_ex(self, l): #wait untill end
+		#TODO
 		self.l=l
-	def mov(l): #non-blocking so can use from UI without new thread 
+	def mov_relative(self, l):	
+		#TODO
+		pass
+	def mov(self, l): #non-blocking so can use from UI without new thread 
+		id_=self.id_
+		current_pose = dType.GetPose(api, id_)
+		#dType.SetPTPLParamsEx(api, id_,50,30,1)
+		dType.SetPTPWithLCmdEx(api, id_, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], l, 1)
+
 		pass
 	#def setCursor(l):
 	#	pass
@@ -924,7 +949,7 @@ class WidgetDraw1(QtWidgets.QWidget):
 		self.cy=cent.y()
 		qp.drawLine(QPointF(0, self.cy), QPointF(xywh.width(), self.cy)) #w #center cross lines
 		qp.drawLine(QPointF(self.cx, 0), QPointF(self.cx, xywh.height())) #h
-		
+		#print(self.cx, self.cy, xywh.width(), xywh.height())
 		self.drawPoints(qp)
 		
 		qp.end()
@@ -961,8 +986,10 @@ class WidgetDraw1(QtWidgets.QWidget):
 			if(dobotSt.bRail):
 				qp.setPen(QPen(dobotSt.color, 2))
 				xend=self.xywh.width()-50
-				y=self.cy-10
+				y=self.cy+111
 				qp.drawLine(QPointF(xend-dobotSt.posCursorL, y), QPointF(xend, y)) 
+				qp.drawLine(QPointF(xend-dobotRailState.getL(False), y-8), QPointF(xend, y-8))
+				#print(dobotRailState.l)
 			
 	def draw1pos_hist(self, qp, pos, pos_hist_n, dobotSt): #TODO draw as always but dimmer. Add on move, del on return btn
 		x=pos[0]
@@ -1061,7 +1088,9 @@ class WidgetDraw1(QtWidgets.QWidget):
 			if Key.ctrl_l in class1.keys :
 				dobotStates[window.id_selected].incrPosCursorR(d)
 			elif Key.shift in class1.keys :
-				dobotStates[window.id_selected].incrPosCursorLRail(d)
+
+				#dobotStates[window.id_selected].incrPosCursorLRail(d)  #rail for selected dobot
+				dobotRailState.dobotSt.incrPosCursorLRail(d) #if only single rail available
 			else:
 				dobotStates[window.id_selected].incrPosCursorZ(d)
 		event.accept()

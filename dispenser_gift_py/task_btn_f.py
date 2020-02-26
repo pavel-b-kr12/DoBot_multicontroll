@@ -59,10 +59,8 @@ def f_nm():
 
 
 def movJ(id_, posJ): #relative to pivot r-axis
-	print("posJ:",posJ)
-	dType.SetPTPCmdEx_mon(api, id_, 4, posJ[0],  posJ[1],  posJ[2], posJ[3]+dobotStates[id_].posPivot[3], 1)
-	print("now:",dType.GetPose(api, id_))
-def movJ_def(id_, j1,j2,j3,j4): #set None to stay current
+	movJ_abs(id_, [posJ[0],  posJ[1],  posJ[2], posJ[3]+dobotStates[id_].posPivot[3]])
+def posJ_fill_None_w_current(id_, j1,j2,j3,j4):
 	pos_now=dType.GetPose(api, id_)
 	if(j1 is None):
 		j1=pos_now[4]
@@ -73,14 +71,23 @@ def movJ_def(id_, j1,j2,j3,j4): #set None to stay current
 	if(j4 is None):
 		j4=pos_now[7]
 	else:
-		j4+=dobotStates[id_].posPivot[3]
-		
-	#print("posJ:",[j1,j2,j3,j4])
-	dType.SetPTPCmdEx_mon(api, id_, 4, j1, j2, j3, j4, 1)
-	print("now:",dType.GetPose(api, id_))
+		j4+=dobotStates[id_].posPivot[3] #relative to pivot r-axis
+	return [j1,j2,j3,j4]
+
+def movJ_abs(id_, pos):
+	dType.SetPTPCmdEx_mon(api, id_, 4, pos[0], pos[1], pos[2], pos[3], 1)
+	#print("now:",dType.GetPose(api, id_))
+def movJ_def_p(id_, pos):
+	movJ_def(id_, pos[0], pos[1], pos[2], pos[3])
+def movJ_def(id_, j1,j2,j3,j4): #set None to stay current
+	posJ=posJ_fill_None_w_current(id_, j1,j2,j3,j4)
+	movJ_abs(id_, posJ)
+	
 def movRail(id_, L):
+	movRail_id(id_rail, L)
+def movRail_id(id_, L):
 	current_pose = dType.GetPose(api, id_)
-	dType.SetPTPLParamsEx(api, id_,200,30,1)
+	#dType.SetPTPLParamsEx(api, id_,200,30,1)
 	dType.SetPTPWithLCmdEx(api, id_, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], L, 1)
 	
 	
@@ -88,11 +95,12 @@ m1_pos_at_pack=[-2.8,-45.88,25.5,37.22+6,1133]
 m1_pos_before_pack=[23,8,-66,25.5,30+6,1133]
 #J angle  movJ( m1_pos_at_pack[0],  m1_pos_at_pack[1],  m1_pos_at_pack[2], m1_pos_at_pack[3]+dobotStates[id_m1].posPivot[3], 1)
 
+m1_pos_pivot=[0,0, 92,None]
 m1_pos_at_mag_site=[180,  (-180),  5, (-10)] #!! must move CCW
 m1_pos_at_pack_dx=-40
 m1_pos_at_pack_Nx=0
 m1_pos_at_pack_Ny=0
-pos_rail_pivot=760  #780max to not hit 
+pos_rail_pivot=638  #780max to not hit 
 #============= calibrate 0 at Dobot start
 def t0_magR_rail_Home():
 	print(f_nm())
@@ -111,31 +119,33 @@ def t01_m1_find_pivot():
 	print(f_nm())
 	tskMarks_clear_all(False)
 	queue_put(thread_magR_queue, t01_m1_find_pivot_f)
-def t01_m1_find_pivot_f():
+def t01_m1_find_pivot_f(): #115.3
 	##!!if pos at pack - move before pack 
 	print(f_nm())
 	btn=window.t01_m1_find_pivot
 	tskStart_mark(btn, id_magR)
 	
-	#move to target pos
-	movRail(id_magR, pos_rail_pivot)
-	#movJ_def(id_m1, None,None, 84,None) #z 37
-	movJ_def(id_m1, 0,0, 84,None) #z 37
+	#move to target pos to set pivot for r-axis
+	dobotRailState.mov(pos_rail_pivot)
+	movJ_def_p(id_m1,[None, None, m1_pos_pivot, None]) #z
+	movJ_def_p(id_m1,m1_pos_pivot)
 	
 	pos_m1 = dType.GetPose(api, id_m1)
 	print(pos_m1)
 	
+	
+	bFIndCCW_incr=-1
 	#rot CCW
 	#check sensor until 1
 	while(True):
 		if(check_packet()): 
 			break
-		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, 2, 1)
+		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, 2*bFIndCCW_incr, 1)
 		
 	#rot CW
 	#check sensor until 0
 	while(True):
-		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, -1, 1)
+		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, -1*bFIndCCW_incr, 1)
 		if(not check_packet()): 
 			break
 	pos_m1 = dType.GetPose(api, id_m1)
@@ -143,14 +153,14 @@ def t01_m1_find_pivot_f():
 	#rot CCW
 	#check sensor until 1
 	while(True):
-		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, 0.1, 1)
+		dType.SetPTPCmdEx(api, id_m1, 6, 0,  0,  0, 0.1*bFIndCCW_incr, 1)
 		#move CCW
 		#dType.SetPTPCmdEx_mon(api, id_m1, MOV_Relative, None, None, None, 1, 1)# move a bit r-axis
 		
 		# check sensor until 1
 		if(check_packet()): 
 			break
-			
+
 	pos_m1 = dType.GetPose(api, id_m1)
 	print("find target at: ",pos_m1[0:4],"  r:", pos_m1[7])
 	
@@ -158,6 +168,11 @@ def t01_m1_find_pivot_f():
 	
 	dobotStates[id_m1].posPivot=dType.GetPose(api, id_m1)
 	
+	#out  of pivot to use cartesian XYZ, because can't go for j 0,0 other way then movJ
+	movJ_def_p(id_m1,[-14.221565246582031,	-47.71931838989258,	m1_pos_pivot[2],	15.440947532653809])
+	# dType.SetPTPCmdEx_mon(api, id_m1, 4,	-14.221565246582031,	-47.71931838989258,	90.19998931884766,	15.440947532653809, 1) #movJ
+	# dType.SetPTPCmdEx_mon(api, id_m1, 2,	287.9470520019531,	-225.6269989013672,	90.19998931884766,	-46.499935150146484, 1) #movXYZ
+
 	tskEnd_mark(btn)
 	if(bConnectTascs):
 		queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
@@ -179,9 +194,16 @@ def t1_m1_pos_at_packet_f():
 	
 	dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
 	
-	movJ(id_m1, [8,  -48,  30, 30.2-20.7]) #m1_pos_before_pack
-	movRail(id_magR, pos_rail_pivot-m1_pos_at_pack_Nx*175)
-	movJ(id_m1, [-4.5, -35, 30, 30.2-20.7] ) #check
+		##############800
+
+
+	# dType.SetPTPCmdEx_mon(api, id_m1, 4,	-25.997215270996094,	-59.63286209106445,	57.712013244628906,	80.47640991210938, 1) #movJ
+	# dType.SetPTPCmdEx_mon(api, id_m1, 2,	195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172, 1) #movXYZ
+	mov(id_m1, [195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172])
+
+	#movJ(id_m1, [8,  -48,  30, 30.2-20.7]) #m1_pos_before_pack
+	dobotRailState.mov(pos_rail_pivot+(800-638)-m1_pos_at_pack_Nx*175)
+	#movJ(id_m1, [-4.5, -35, 30, 30.2-20.7] ) #check
 	#movJ(id_m1,[-14,  (-25),  27, 31]) #m1_pos_at_pack at this pos sensor can check, and Z up can pick packet. But cant move Y
 	
 	#print(dobotStates[id_m1])
