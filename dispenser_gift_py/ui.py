@@ -158,9 +158,11 @@ def on_release(key):
 		#if(dobotSt == None):
 		#	continue
 		
-		pos=dobotSt.pos_hist.pop()
-		print(pos) #dobotSt.pos_hist
-		dobotSt.setPosCursorXYZR ( pos )
+		if(len(dobotSt.pos_hist)>0):
+			pos=dobotSt.pos_hist.pop()
+			print(pos) #dobotSt.pos_hist
+			dobotSt.setPosCursorXYZR ( pos )
+			#TODO save load hist railL
 			
 		'''
 		try:

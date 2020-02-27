@@ -787,7 +787,7 @@ def print_selected_PosNow_copy_movJ(pos, bCopy=True):
 	return s
 def print_rail_PosL_copy(bCopy=True):
 	#pos=dobotRailState.dobotSt.getPos(False)
-	L=dobotRailState.getL()
+	L=dobotRailState.getL(True)
 	#s="dType.SetPTPWithLCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_J)+",	%1s,	%1s,	%1s,	%1s, 1"%(pos[4],pos[5],pos[6],pos[7])+") #movJ"
 	s="dobotRailState.mov("+str(round(L,1))+")"
 	print(s)
@@ -854,11 +854,12 @@ class DobotState():
 		self._lock.release()
 		widgetDraw1.update()
 
-	def setPosCursorXYZR(self, xyzr_arr):
+	def setPosCursorXYZR(self, xyzr_arr, bRedraw=True):
 		self._lock.acquire()
 		self.posCursor=xyzr_arr
 		self._lock.release()
-		widgetDraw1.update()
+		if(bRedraw):
+			widgetDraw1.update()
 	def setPosCursorXY(self, x,y):
 		self._lock.acquire()
 		self.posCursor[0]=x
@@ -880,9 +881,17 @@ class DobotState():
 		self.posCursor[3]+=dr
 		self._lock.release()
 		widgetDraw1.update()
-	def incrPosCursorLRail(self, L): #!!TODO DobotRailState l posCursorL
+	
+	def setPosCursorLRail(self, L, bRedraw=True):
 		self._lock.acquire()
-		self.posCursorL+=L
+		self.posCursorL=L
+		self._lock.release()
+		if(bRedraw):
+			widgetDraw1.update()
+		
+	def incrPosCursorLRail(self, dL): #!!TODO DobotRailState l posCursorL
+		self._lock.acquire()
+		self.posCursorL+=dL
 		if( self.posCursorL <0 ):
 			self.posCursorL=0
 		elif( self.posCursorL >999 ):
@@ -949,7 +958,7 @@ class DobotState():
 		current_pose = dType.GetPose(api, id_)
 		dobotStates[id_].setPosCursorXYZR(current_pose)
 		
-
+dobotRailState=None  #TODO multiple. But currently we have 1
 class DobotRailState(): #!!TODO
 	l=0
 	id_=0
@@ -972,6 +981,7 @@ class DobotRailState(): #!!TODO
 			self.l=dType.GetPoseL(api, self.id_)[0]
 		#self._lock.release()
 		if(bRedraw):
+			window.label_m1_pos_target.setText(str(round(self.l,1)))  #TODO rename to L
 			widgetDraw1.update()
 		return self.l
 	def mov_ex(self, l): #wait untill end
@@ -993,11 +1003,10 @@ class DobotRailState(): #!!TODO
 		current_pose = dType.GetPose(api, id_)
 		#dType.SetPTPLParamsEx(api, id_,50,30,1)
 		dType.SetPTPWithLCmdEx(api, id_, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], self.dobotSt.posCursorL, 1)
-		
 
 	#def setCursor(l):
 	#	pass
-dobotRailState=None  #TODO multiple. But currently we have 1
+
 	
 	
 #=====================================================
@@ -1053,17 +1062,17 @@ class WidgetDraw1(QtWidgets.QWidget):
 			#print(i)
 			#print(pos)
 			
-			if(len(pos)>2):
+			if(len(pos)>2):			# draw pos
 				#qp.setBrush(Qt.black)
 				qp.setBrush(dobotSt.color)
 				#qp.setBrush(Qt.transparent)
 				qp.setPen(QPen(QtCore.Qt.red, 2))
 				self.draw1pos(qp, pos[0], pos[1], pos[2], pos[3], dobotSt) #now
-			if(len(posCursor)>2):
+			if(len(posCursor)>2):	# draw posCursor
 				qp.setPen(QPen(dobotSt.color, 2))
 				qp.setBrush(dobotSt.color)
 				self.draw1pos(qp, posCursor[0], posCursor[1], posCursor[2], posCursor[3], dobotSt, dobotSt.id_ == window.id_selected) #target
-			if(dobotSt.bRail):
+			if(dobotSt.bRail):		# draw rail pos
 				qp.setPen(QPen(dobotSt.color, 2))
 				xend=self.xywh.width()-50
 				y=self.cy+111

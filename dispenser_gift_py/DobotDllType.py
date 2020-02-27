@@ -2010,7 +2010,7 @@ def printPosNow(api, dobotId, bPrint=False): # TODO move to GetPose
 	if(dobotStates[dobotId] is not None):
 		dobotStates[dobotId].setPosNow(pos) #TODO opt disableupd if run from printPos as it set all together
 	if(bPrint):
-		print("pos of %4s : %4s %4s %4s %4s J: %4s %4s" %( dobotId, pos[0], pos[1], pos[2], pos[3], pos[4], pos[5] ), end="")
+		print("pos of %4s : %.2f %.2f %.2f %.3f J: %.3f %.3f" %( dobotId, pos[0], pos[1], pos[2], pos[3], pos[4], pos[5] ), end="")
 	return pos
 
 
