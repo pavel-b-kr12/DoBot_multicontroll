@@ -108,8 +108,8 @@ def connectDobots():
 	global magR
 
 	m1,id_m1=connectDobot("COM3", "m1", QColor(0,111,255,166), window.checkBox_M1, window.label_M1_id) #0   # QtCore.Qt.green QColor(0, 0, 255) Qt.darkYellow
-	magL,id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id, True) #1 # rail connected
-	magR,id_magR=connectDobot("COM17", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id)  #2 
+	magL,id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id) #1 # rail connected
+	magR,id_magR=connectDobot("COM16", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id, True)  #2 
 	
 
 id_nms_default=["id_m1","id_magL","id_magR"] # for 0, 1 , 2
@@ -888,13 +888,16 @@ class DobotState():
 			 pos[3]+=self.posPivot[3]
 		dType.SetPTPCmdEx_mon(api, self.id_, 2, pos[0],  pos[1],  pos[2], pos[3], 1)	
 	def mov_relative(self, pos):
+		#print('mov_relative to ', pos)
 		dType.SetPTPCmdEx_mon(api, self.id_, 7, pos[0],  pos[1],  pos[2], pos[3], 1)
 		
-	def movJ_relative(self, posJ):
-		dType.SetPTPCmdEx_mon(api, self.id_, 6, posJ[0],  posJ[1],  posJ[2], posJ[3], 1)
+	def movJ_relative(self, pos):
+		#print('movJ_relative to ', pos)
+		dType.SetPTPCmdEx_mon(api, self.id_, 6, pos[0],  pos[1],  pos[2], pos[3], 1)
 	
-	def movJ_abs(self, posJ):
+	def movJ_abs(self, pos):
 		dType.SetPTPCmdEx_mon(api, self.id_, 4, pos[0], pos[1], pos[2], pos[3], 1)
+		#move J linear  PTPmode=5 is also not possible from 0
 		
 	#-------------------------------
 	
@@ -905,7 +908,7 @@ class DobotState():
 	def movJ(self, pos):			#relative to pivot r-axis
 		if(pos[3] is not None):
 			 pos[3]+=self.posPivot[3]
-		self.movJ_abs([pos[0], pos[1], posJ[2], posJ[3]])
+		self.movJ_abs([pos[0], pos[1], pos[2], pos[3]])
 
 
 	'''
@@ -953,10 +956,10 @@ class DobotRailState(): #!!TODO
 		#print('rail L:', dType.GetPoseL(api,id_))
 
 	def getL(self, bRedraw=True):
-		self._lock.acquire()
+		#self._lock.acquire() #!? fix freeze if lock (only if dobot connected)
 		if(self.dobotSt.bOn): #!TODO move check to dType
-			self.l=dType.GetPoseL(api, self.id_)
-		self._lock.release()
+			self.l=dType.GetPoseL(api, self.id_)[0]
+		#self._lock.release()
 		if(bRedraw):
 			widgetDraw1.update()
 		return self.l
@@ -1053,8 +1056,8 @@ class WidgetDraw1(QtWidgets.QWidget):
 				qp.setPen(QPen(dobotSt.color, 2))
 				xend=self.xywh.width()-50
 				y=self.cy+111
-				qp.drawLine(QPointF(xend-dobotSt.posCursorL, y), QPointF(xend, y)) 
-				qp.drawLine(QPointF(xend-dobotRailState.getL(False), y-8), QPointF(xend, y-8))
+				qp.drawLine(QPointF(xend-dobotSt.posCursorL/2, y), QPointF(xend, y))  #!TODO map L to w
+				#!!!qp.drawLine(QPointF(xend-dobotRailState.getL(False), y-8), QPointF(xend, y-8))
 				#print(dobotRailState.l)
 			
 	def draw1pos_hist(self, qp, pos, pos_hist_n, dobotSt): #TODO draw as always but dimmer. Add on move, del on return btn

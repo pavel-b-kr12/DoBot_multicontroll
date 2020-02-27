@@ -58,9 +58,8 @@ def t01_m1_find_pivot_f(): #115.3
 	
 	#move to target pos to set pivot for r-axis
 	dobotRailState.mov(pos_rail_pivot)
-	m1.movJ([None, None, m1_pos_at_pivot, None]) #z
+	m1.movJ([None, None, m1_pos_at_pivot[2], None]) #z
 	m1.movJ(m1_pos_at_pivot)
-	
 
 	#!@@ TODO replace w dType SetTRIGCmd		#TODO repeat for avg
 	bFIndCCW_incr=-1
@@ -68,17 +67,17 @@ def t01_m1_find_pivot_f(): #115.3
 	while(True):
 		if(check_packet()): 
 			break
-		m1.mov_relative(0,  0,  0, 2*bFIndCCW_incr)
+		m1.movJ_relative([0,  0,  0, 2*bFIndCCW_incr]) #can't do mov_relative from J 0,0 even w only r 
 		
 	#rot CW		#check sensor until 0
 	while(True):
-		m1.mov_relative(0,  0,  0, -1*bFIndCCW_incr)
+		m1.movJ_relative([0,  0,  0, -1*bFIndCCW_incr])
 		if(not check_packet()): 
 			break
 
 	#rot CCW	#check sensor until 1
 	while(True):
-		m1.mov_relative(0,  0,  0, 0.1*bFIndCCW_incr)
+		m1.movJ_relative([0,  0,  0, 0.1*bFIndCCW_incr])
 		if(check_packet()): 
 			break
 
@@ -89,7 +88,7 @@ def t01_m1_find_pivot_f(): #115.3
 	m1.posPivot=dType.GetPose(api, id_m1) #TODO draw it
 	
 	# firstly need mov out of pivot to use cartesian XYZ, because can't go for j 0,0 other way then movJ
-	m1.movJ(-14.221565246582031,	-47.71931838989258,	None,	15.440947532653809)
+	m1.movJ([-14.221565246582031,	-47.71931838989258,	None,	15.440947532653809])
 
 	tskEnd_mark(btn)
 	if(bConnectTascs):
@@ -116,7 +115,7 @@ def t1_m1_pos_at_packet_f():
 
 	# dType.SetPTPCmdEx_mon(api, id_m1, 4,	-25.997215270996094,	-59.63286209106445,	57.712013244628906,	80.47640991210938, 1) #movJ
 	# dType.SetPTPCmdEx_mon(api, id_m1, 2,	195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172, 1) #movXYZ
-	m1.mov(195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172)
+	m1.mov([195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172])
 
 	#movJ(id_m1, [8,  -48,  30, 30.2-20.7]) #m1_pos_before_pack
 	dobotRailState.mov(pos_rail_pivot+(800-638)-m1_pos_at_pack_Nx*175)

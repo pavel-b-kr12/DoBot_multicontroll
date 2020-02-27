@@ -790,7 +790,6 @@ def SetHOMECmd(api, dobotId, temp, isQueued=0):
 			break
 	return [queuedCmdIndex.value]
 def SetHOMECmd_mon(api, dobotId, temp, isQueued=0):
-	print("isQueued",isQueued)
 	cmd = HOMECmd()
 	cmd.temp = temp
 	queuedCmdIndex = c_uint64(0)
@@ -1240,6 +1239,8 @@ def SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0):
 	queuedCmdIndex = c_uint64(0)
 	if( (dobotStates[dobotId] is None) or dobotStates[dobotId].bOn): #return if Dobot offline
 		while(True):
+			#print("SetPTPWithLCmd", ptpMode, x, y, z, rHead,'xx')
+			
 			result = api.SetPTPCmd(dobotId, byref(cmd), isQueued, byref(queuedCmdIndex))
 			
 			if result != DobotCommunicate.DobotCommunicate_NoError:
@@ -1258,6 +1259,8 @@ def SetPTPWithLCmd(api, dobotId, ptpMode, x, y, z, rHead, l, isQueued=0):
 	cmd.l = l
 	queuedCmdIndex = c_uint64(0)
 	while(True):
+		#print("SetPTPWithLCmd", ptpMode, x, y, z, rHead,'xx')
+
 		result = api.SetPTPWithLCmd(dobotId, byref(cmd), isQueued, byref(queuedCmdIndex))
 		if result != DobotCommunicate.DobotCommunicate_NoError:
 			dSleep(2)
@@ -1877,7 +1880,7 @@ def SetHOMECmdEx_mon(api, dobotId,  temp,  isQueued=0): #TODO temp why need del
 		
 		ret = SetHOMECmd_mon(api, dobotId, temp,  isQueued)
 		
-		print("home index",ret[0])
+		#print("home index",ret[0])
 
 		while(True):
 			result = api.GetQueuedCmdCurrentIndex(dobotId, byref(queuedCmdIndex))
@@ -1951,9 +1954,12 @@ def SetPTPJumpParamsEx(api, dobotId, jumpHeight, maxJumpHeight, isQueued=0):
 			break
 		dSleep(5)
 
-def NoneToCurrent(api, dobotId, pos):
+def NoneToCurrent(api, dobotId, ptpMode, pos):
 	if(pos[0] is None or pos[1] is None or pos[2] is None or pos[3] is None): #TODO use
 		pos_now = GetPose(api, dobotId)
+		if(ptpMode == 6 or ptpMode == 4): #J
+			pos_now=pos_now[4:8]
+			
 		if(pos[0] is None):
 			pos[0]=pos_now[0]
 		if(pos[1] is None):
@@ -1967,7 +1973,7 @@ def NoneToCurrent(api, dobotId, pos):
 
 #x, y, z, rHead  can be None to use current
 def SetPTPCmdEx(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0):
-	NoneToCurrent(api, dobotId, [x, y, z, rHead])
+	NoneToCurrent(api, dobotId, ptpMode,[x, y, z, rHead])
 	print_PosCursor(api, dobotId, x, y, z, rHead)
 	ret = SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued)
 	while(True):
@@ -1977,12 +1983,13 @@ def SetPTPCmdEx(api, dobotId, ptpMode, x, y, z, rHead, isQueued=0):
 		dSleep(5)
 		
 def SetPTPCmdEx_mon(api, dobotId, ptpMode, x, y, z, rHead, isQueued):
-	pos=NoneToCurrent(api, dobotId, [x, y, z, rHead])
+	pos=NoneToCurrent(api, dobotId, ptpMode,[x, y, z, rHead])
 	x=pos[0]
 	y=pos[1]
 	z=pos[2]
 	rHead=pos[3]
 	print_PosCursor(api, dobotId, x, y, z, rHead)
+	#print('SetPTPCmdEx_mon', ptpMode, x, y, z, rHead)
 	ret = SetPTPCmd(api, dobotId, ptpMode, x, y, z, rHead, isQueued)
 	#print(x, y, z)
 	while(True):
