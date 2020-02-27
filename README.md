@@ -12,6 +12,8 @@ Press F1 for key map
 
 
 ### TODO
+8khe37
+* copy w L
 
 * 🐛 fix stop cause cant resume
 
@@ -21,6 +23,7 @@ Press F1 for key map
 * convert xyz/J 2F^
 
 * toggle auto upd pos from cursor
+* upd coord, copy on click it
 
 save rail at off
 
@@ -43,17 +46,22 @@ print( get_distance_to_move_Rail_from_which_NextPosPossible(api, dobotId, xyz_no
 ```
  
 ### install python libraries for Windows:
+
 pip install PySide2
+
 pip install pyserial
+
 pip install pynput
+
 pip install colorama
+
 pip install pywin32 REM win32clipboard 
 
 
 ### UI  guide:
 - ctrl+wheel change r-axis
 - shift+wheel change rail L
-- left|rigrt alt+abowe - faster|slower
+- left|rigrt alt+above - faster|slower
 - c cursor to current pos
 ### Tips:
 * SetArmOrientation is need to move with XYZ, but not with Joints

@@ -773,17 +773,27 @@ def CopyToClipboard(s):
 		#print("CloseClipboard")
 		#win32clipboard.CloseClipboard()
 		
-def print_selected_PosNow_copy_movXYZ(pos):
-	s="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_xyz_LINEAR)+",	%1s,	%1s,	%1s,	%1s, 1"%(pos[0],pos[1],pos[2],pos[3])+") #movXYZ\r\n"
-	print("\r\n",s)
-	CopyToClipboard(s)
+def print_selected_PosNow_copy_movXYZ(pos, bCopy=True):
+	s="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_xyz_LINEAR)+",	%.2f,	%.2f,	%.2f,	%.2f, 1"%(pos[0],pos[1],pos[2],pos[3])+") #movXYZ"
+	print(s) #"\r\n",
+	if(bCopy):
+		CopyToClipboard(s)
 	return s
-def print_selected_PosNow_copy_movJ(pos, s1=""):
-	s="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_J)+",	%1s,	%1s,	%1s,	%1s, 1"%(pos[4],pos[5],pos[6],pos[7])+") #movJ\r\n"
-	print("\r\n",s)
-	CopyToClipboard(s+s1)
+def print_selected_PosNow_copy_movJ(pos, bCopy=True):
+	s="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_J)+",	%.2f,	%.2f,	%.2f,	%.2f, 1"%(pos[4],pos[5],pos[6],pos[3])+") #movJ"  #!!fix [7] is wo -pivot
+	print(s)
+	if(bCopy):
+		CopyToClipboard(s)
 	return s
-
+def print_rail_PosL_copy(bCopy=True):
+	#pos=dobotRailState.dobotSt.getPos(False)
+	L=dobotRailState.getL()
+	#s="dType.SetPTPWithLCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_J)+",	%1s,	%1s,	%1s,	%1s, 1"%(pos[4],pos[5],pos[6],pos[7])+") #movJ"
+	s="dobotRailState.mov("+str(round(L,1))+")"
+	print(s)
+	if(bCopy):
+		CopyToClipboard(s)
+	return s
 
 #=====================================================
 
@@ -835,6 +845,7 @@ class DobotState():
 		self._lock.release()
 		if(bRedraw):
 			widgetDraw1.update()
+		return self.pos
 	
 	def setPosNow(self, n):
 		self._lock.acquire()

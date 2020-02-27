@@ -1,4 +1,123 @@
 
+p2
+634
+
+m1 bofeore piv
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	260.48,	11.43,	92.00,	-72.39, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	51.83,	-98.64,	92.00,	-72.39, 1) #movJ
+dobotRailState.mov(638.0)
+
+
+m1
+before get 
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	147.05,	-202.14,	110.00,	239.50, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	-2.64,	-102.65,	110.00,	239.50, 1) #movJ
+dobotRailState.mov(638.0)
+
+m2 get mov
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	227.10,	-184.63,	216.00,	239.50, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	3.86,	-85.94,	216.00,	239.50, 1) #movJ
+dobotRailState.mov(638.0)
+
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	261.13,	-42.58,	216.00,	239.50, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	39.33,	-97.18,	216.00,	239.50, 1) #movJ
+dobotRailState.mov(638.0)
+
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	226.46,	93.45,	231.01,	23.93, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	74.66,	-104.47,	231.01,	23.93, 1) #movJ
+dobotRailState.mov(638.0)
+
+dType.SetPTPCmdEx_mon(api, id_magR, 2,	-82.12,	-237.69,	-58.79,	-108.85, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_magR, 4,	-109.06,	59.92,	59.34,	-108.85, 1) #movJ
+dobotRailState.mov(358.0)
+
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	270.05,	264.10,	231.01,	23.93, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	63.57,	-38.42,	231.01,	23.93, 1) #movJ
+dobotRailState.mov(358.0)
+
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	228.57,	307.41,	231.01,	99.93, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	70.09,	-33.45,	231.01,	99.93, 1) #movJ
+dobotRailState.mov(358.0)
+
+#down at desc
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	228.57,	307.41,	175.01,	99.93, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	70.09,	-33.45,	175.01,	99.93, 1) #movJ
+dobotRailState.mov(358.0)
+
+out
+dobotRailState.mov(270.0)
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	282.69,	97.11,	134.26,	-3.02, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	60.61,	-83.29,	134.26,	-3.02, 1) #movJ
+dobotRailState.mov(269.7)
+
+~
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	225.63,	308.91,	135.01,	83.93, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	70.85,	-33.99,	135.01,	83.93, 1) #movJ
+dobotRailState.mov(358.0)
+
+
+
+m1 before detect ручка пакета
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	202.14,	-161.15,	118.82,	-7.64, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	11.18,	-99.48,	118.82,	80.66, 1) #movJ
+dobotRailState.mov(634.9)
+m1 detect ручка пакета
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	202.14,	-246.30,	130.82,	-7.64, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	-13.43,	-74.39,	130.82,	80.18, 1) #movJ
+dobotRailState.mov(634.9)
+
+m1 before detect
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	199.22,	-151.36,	34.82,	-7.64, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	14.05,	-102.56,	34.82,	80.87, 1) #movJ
+dobotRailState.mov(634.9)
+m1 detect 
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	147.05,	-212.14,	34.00,	239.50, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	-5.46,	-99.62,	34.00,	239.50, 1) #movJ
+dobotRailState.mov(638.0)
+
+detect 2
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	152.80,	-274.52,	34.82,	-7.64, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	-22.66,	-76.48,	34.82,	-7.64, 1) #movJ
+dobotRailState.mov(634.9)
+
+touch 2
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	152.80,	-274.52,	116.82,	-7.64, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	-22.66,	-76.48,	116.82,	-7.64, 1) #movJ
+dobotRailState.mov(634.9)
+
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	247.78,	-114.28,	230.82,	-7.64, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	22.23,	-93.97,	230.82,	-7.64, 1) #movJ
+dobotRailState.mov(634.9)
+
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	332.98,	151.36,	230.82,	84.36, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	48.32,	-47.76,	230.82,	84.36, 1) #movJ
+dobotRailState.mov(500.0)
+
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	326.95,	104.41,	230.82,	158.36, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	48.61,	-61.80,	230.82,	158.36, 1) #movJ
+dobotRailState.mov(500.0)
+###drop
+out
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	334.48,	72.41,	146.82,	158.36, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	43.39,	-62.35,	146.82,	158.36, 1) #movJ
+dobotRailState.mov(500.0)
+
+p3
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	147.05,	-357.14,	34.82,	-7.64, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	-52.55,	-30.15,	34.82,	-7.64, 1) #movJ
+dobotRailState.mov(634.9)
+p30
+dType.SetPTPCmdEx_mon(api, id_m1, 2,	152.84,	-366.89,	120.09,	2.86, 1) #movXYZ
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	-60.91,	-12.95,	120.09,	2.86, 1) #movJ
+dobotRailState.mov(644.8)
+
+
+
+
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	-13.427459716796875,	-74.39215087890625,	130.81591796875,	80.18193054199219, 1) #movJ
+dobotRailState.mov(634.9)
+
+
 	min  max
 m1   [,,9]   [0,0,233]
 m1  J[,,9]   [84.9,0,233]

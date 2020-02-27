@@ -55,11 +55,21 @@ def t01_m1_find_pivot_f(): #115.3
 	print(f_nm())
 	btn=window.t01_m1_find_pivot
 	tskStart_mark(btn, id_magR)
+
+	#safe pos
+	dobotRailState.mov(634.9)
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	14.05,	-102.56,	70,	80.87, 1) #movJ
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	14.05,	-102.56,	34.82,	80.87, 1) #movJ
+	#befire piv
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	51.83,	-98.64,	92.00,	-72.39, 1) #movJ
 	
 	#move to target pos to set pivot for r-axis
-	dobotRailState.mov(pos_rail_pivot)
 	m1.movJ([None, None, m1_pos_at_pivot[2], None]) #z
 	m1.movJ(m1_pos_at_pivot)
+	
+	time.sleep(3)
+	dobotRailState.mov(pos_rail_pivot)
+	
 
 	#!@@ TODO replace w dType SetTRIGCmd		#TODO repeat for avg
 	bFIndCCW_incr=-1
@@ -111,14 +121,19 @@ def t1_m1_pos_at_packet_f():
 	dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
 	
 		##############800
-
+	#m1 before detect
+	dType.SetPTPCmdEx_mon(api, id_m1, 2,	199.22,	-151.36,	34.82,	-7.64, 1) #movXYZ
+	dobotRailState.mov(634.9)
+	#m1 detect 
+	dType.SetPTPCmdEx_mon(api, id_m1, 2,	200.68,	-218.27,	34.82,	-7.64, 1) #movXYZ
 
 	# dType.SetPTPCmdEx_mon(api, id_m1, 4,	-25.997215270996094,	-59.63286209106445,	57.712013244628906,	80.47640991210938, 1) #movJ
 	# dType.SetPTPCmdEx_mon(api, id_m1, 2,	195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172, 1) #movXYZ
-	m1.mov([195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172])
+	#m1.mov([195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172])
+	#m1.mov([165,	-252,	57,	92])
 
 	#movJ(id_m1, [8,  -48,  30, 30.2-20.7]) #m1_pos_before_pack
-	dobotRailState.mov(pos_rail_pivot+(800-638)-m1_pos_at_pack_Nx*175)
+	#dobotRailState.mov(pos_rail_pivot+(800-638)-m1_pos_at_pack_Nx*175)
 	#movJ(id_m1, [-4.5, -35, 30, 30.2-20.7] ) #check
 	#movJ(id_m1,[-14,  (-25),  27, 31]) #m1_pos_at_pack at this pos sensor can check, and Z up can pick packet. But cant move Y
 	

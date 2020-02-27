@@ -2078,6 +2078,8 @@ def SetIOPWMEx(api, dobotId, address, frequency, dutyCycle,  isQueued=0):
 			break
 		dSleep(5)
 
+def SetPTPWithLCmdEx_mon(api, dobotId, ptpMode, x, y, z, rHead,  l, isQueued=0): #!!TODO mon
+	SetPTPWithLCmdEx(api, dobotId, ptpMode, x, y, z, rHead,  l, isQueued)
 def SetPTPWithLCmdEx(api, dobotId, ptpMode, x, y, z, rHead,  l, isQueued=0):
 	ret = GetDeviceWithL(api, dobotId)
 	if not ret:
