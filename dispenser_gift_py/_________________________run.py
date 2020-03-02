@@ -798,7 +798,7 @@ def print_rail_PosL_copy(bCopy=True):
 	L=dobotRailState.getL(True)
 	#s="dType.SetPTPWithLCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_J)+",	%1s,	%1s,	%1s,	%1s, 1"%(pos[4],pos[5],pos[6],pos[7])+") #movJ"
 	s="dobotRailState.mov("+str(round(L,1))+")"
-	print(s)
+	print(L)
 	if(bCopy):
 		CopyToClipboard(s)
 	return s
@@ -937,6 +937,9 @@ class DobotState():
 		if(pos[3] is not None):
 			 pos[3]+=self.posPivot[3]
 		self.movJ_abs([pos[0], pos[1], pos[2], pos[3]])
+	def movJx(self, pos): #pos from xyzRxyzr
+		self.movJ_abs([pos[4], pos[5], pos[6], pos[7]])
+		
 
 
 	'''

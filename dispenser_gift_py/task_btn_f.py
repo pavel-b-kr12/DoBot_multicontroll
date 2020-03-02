@@ -42,14 +42,20 @@ def t0_magR_rail_Home_f():
 	print(f_nm())
 	btn=window.t0_magR_rail_Home
 	#tskStart_mark(btn, id_magR)
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	-81.21,	-13.49,	186.00,	-7.81, 1) #movJ
 	dobotRailState.dobotSt.home_mon(btn)
 	#tskEnd_mark(btn)
-	queue_put(thread_m1_queue, t01_m1_find_pivot_f)
+	#queue_put(thread_m1_queue, t01_m1_find_pivot_f)
 	
 def t01_m1_find_pivot():
 	print(f_nm())
 	tskMarks_clear_all(False)
 	queue_put(thread_magR_queue, t01_m1_find_pivot_f)
+	
+def mov_m1_before_pivot():
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	-5,	-5,	186.00,	None, 1) #movJ
+	dobotRailState.mov(0)
+	
 def t01_m1_find_pivot_f(): #115.3
 	##!!if pos at pack - move before pack 
 	print(f_nm())
@@ -57,20 +63,18 @@ def t01_m1_find_pivot_f(): #115.3
 	tskStart_mark(btn, id_magR)
 
 	#safe pos
-	dobotRailState.mov(634.9)
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	14.05,	-102.56,	70,	80.87, 1) #movJ
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	14.05,	-102.56,	34.82,	80.87, 1) #movJ
-	#befire piv
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	51.83,	-98.64,	92.00,	-72.39, 1) #movJ
-	
-	#move to target pos to set pivot for r-axis
-	m1.movJ([None, None, m1_pos_at_pivot[2], None]) #z
-	m1.movJ(m1_pos_at_pivot)
-	
-	time.sleep(3)
-	dobotRailState.mov(pos_rail_pivot)
-	
+	mov_m1_before_pivot()
+	#mov to pivot
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	-81.21,	-13.49,	186.00,	None, 1) #movJ
 
+
+	if(m1.getPos()[3]>0):
+		print('rotete to positive r')
+		while(True):
+			if(check_packet()): 
+				break
+			m1.movJ_relative([0,  0,  0, 2])
+		
 	#!@@ TODO replace w dType SetTRIGCmd		#TODO repeat for avg
 	bFIndCCW_incr=-1
 	#rot CCW	#check sensor until 1
@@ -98,8 +102,10 @@ def t01_m1_find_pivot_f(): #115.3
 	m1.posPivot=dType.GetPose(api, id_m1) #TODO draw it
 	
 	# firstly need mov out of pivot to use cartesian XYZ, because can't go for j 0,0 other way then movJ
-	m1.movJ([-14.221565246582031,	-47.71931838989258,	None,	15.440947532653809])
-
+	#m1.movJ([-14.221565246582031,	-47.71931838989258,	None,	None])
+	
+	mov_m1_before_pivot()
+	
 	tskEnd_mark(btn)
 	if(bConnectTascs):
 		queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
@@ -117,38 +123,23 @@ def t1_m1_pos_at_packet_f():
 	print(f_nm())
 	btn=window.t1_m1_pos_at_packet
 	tskStart_mark(btn, id_m1)
+	#dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
 	
-	dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
+	#pos=m1.getPos()
 	
-		##############800
-	#m1 before detect
-	dType.SetPTPCmdEx_mon(api, id_m1, 2,	199.22,	-151.36,	34.82,	-7.64, 1) #movXYZ
-	dobotRailState.mov(634.9)
-	#m1 detect 
-	dType.SetPTPCmdEx_mon(api, id_m1, 2,	200.68,	-218.27,	34.82,	-7.64, 1) #movXYZ
+	pack0Y=-164
+	packY= pack0Y - m1_pos_at_pack_Nx*(-164-(-240))
+	
+	m1.mov( [-23, pack0Y+33, 50, None]) #safe before all pack
 
-	# dType.SetPTPCmdEx_mon(api, id_m1, 4,	-25.997215270996094,	-59.63286209106445,	57.712013244628906,	80.47640991210938, 1) #movJ
-	# dType.SetPTPCmdEx_mon(api, id_m1, 2,	195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172, 1) #movXYZ
-	#m1.mov([195.00218200683594,	-287.0840759277344,	57.712013244628906,	-5.153667449951172])
-	#m1.mov([165,	-252,	57,	92])
-
-	#movJ(id_m1, [8,  -48,  30, 30.2-20.7]) #m1_pos_before_pack
-	#dobotRailState.mov(pos_rail_pivot+(800-638)-m1_pos_at_pack_Nx*175)
-	#movJ(id_m1, [-4.5, -35, 30, 30.2-20.7] ) #check
-	#movJ(id_m1,[-14,  (-25),  27, 31]) #m1_pos_at_pack at this pos sensor can check, and Z up can pick packet. But cant move Y
+	l_1stPacket=31
+	l_lastPacket=838
+	dL=193-l_1stPacket
 	
-	#print(dobotStates[id_m1])
-	#print(dobotStates[id_m1].posPivot[3])
-	#print("m1 pos:", dType.GetPose(api, id_m1))
-	#print(m1_pos_at_pack[0],  m1_pos_at_pack[1],  m1_pos_at_pack[2], m1_pos_at_pack[3]+dobotStates[id_m1].posPivot[3])
-	
-	#print_state_id(id_m1)
-	#dType.SetPTPCmdEx_mon(api, id_m1, 2, m1_pos_at_pack[0]+m1_pos_at_pack_dx*m1_pos_at_pack_N,  m1_pos_at_pack[1],  m1_pos_at_pack[2],  m1_pos_at_pack[3], 1)
-	#print_state_id(id_m1)
-	#time.sleep(3) ####
-	
-	#dType.SetPTPCmdEx_mon(api, id_m1, 2, m1_pos_at_pack[0]+m1_pos_at_pack_dx*m1_pos_at_pack_N,  m1_pos_at_pack[1]-20,  m1_pos_at_pack[2],  m1_pos_at_pack[3], 1) #to IR sensor distance
-	#print_state_id(id_m1)
+	dobotRailState.mov(31+dL*m1_pos_at_pack_Nx) #right to left
+	dobotRailState.mov(l_lastPacket-dL*m1_pos_at_pack_Nx) #left to right
+	m1.mov( [-23, packY+33, 50, None]) #before row, before detect
+	m1.mov( [-23, packY, 50, None]) #at row, detect
 	
 	#time.sleep(3) ####
 	'''
@@ -188,17 +179,27 @@ def t2_m1_check_packet_f():
 		#time.sleep(2) ####
 		pass
 	else:
-		print("no packet, so going to other pos")
+		m1_pos_at_pack_Ny+=1
+		if(m1_pos_at_pack_Ny==5):
+			m1_pos_at_pack_Ny=0
+			m1_pos_at_pack_Nx+=1
+			if(m1_pos_at_pack_Nx==4):
+				m1_pos_at_pack_Nx=0
+				m1_pos_at_pack_Ny=0
+				print("!! out of packets") #TODO
+		print("no packet, so going to other pos Nx: %1s, Ny: %1s"%(m1_pos_at_pack_Nx,m1_pos_at_pack_Ny))
+			
+		
+		''' #x first
 		m1_pos_at_pack_Nx+= 1
-		if(m1_pos_at_pack_Nx==3):
+		if(m1_pos_at_pack_Nx==4):
 			m1_pos_at_pack_Nx=0
 			m1_pos_at_pack_Ny+=1
 			if(m1_pos_at_pack_Ny==5):
 				print("!! out of packets") #TODO
 				m1_pos_at_pack_Ny=0
 				m1_pos_at_pack_Nx=0
-				pass
-			
+		'''	
 			
 		#if(bConnectTascs):
 		#queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
@@ -226,7 +227,9 @@ def t3_m1_get_packet_f():
 	btn=window.t3_m1_get_packet
 	tskStart_mark(btn, id_m1)
 
-	movJ(id_m1,[-9.495, -41,	228,	38.96]) #pack get
+	#!!slow
+	m1.mov([None, None, 232, None]) #pack get
+	m1.mov_relative([0, 33, 0, 0])
 	'''
 	movJ(id_m1,[38.7,	-75.1,	228,	27.8]) #move
 	movJ(id_m1,[56.8,	-84.6,	228,	22]) #
@@ -269,29 +272,18 @@ def t4_m1_packet_to_mag_site_f():
 	btn=window.t4_m1_packet_to_mag_site
 	tskStart_mark(btn, id_m1)
 	
-	#get packet TODO slower pick
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	-9.494999885559082,	-41.0,	228.0,	38.959999084472656, 1) #movJ
-	dType.SetPTPCmdEx_mon(api, id_m1, 2,	324.4891052246094,	-187.30612182617188,	228.0,	-11.535000801086426, 1) #movXYZ
-
-	#move w packet
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	9.548895835876465,	-60.791259765625,	228.0,	39.707359313964844, 1) #movJ
-	dType.SetPTPCmdEx_mon(api, id_m1, 2,	322.4343566894531,	-122.78236389160156,	228.0,	-11.535004615783691, 1) #movXYZ
-
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	38.217063903808594,	-83.2728042602539,	228.0,	33.52074432373047, 1) #movJ
-	dType.SetPTPCmdEx_mon(api, id_m1, 2,	298.4182434082031,	-17.83038902282715,	228.0,	-11.534996032714844, 1) #movXYZ
-
-	current_pose = dType.GetPose(api, id_magR)
-	dType.SetPTPWithLCmdEx(api, id_magR, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 550, 1)
-
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	55.90485382080078,	-29.299684524536133,	230,	-11.439573287963867, 1) #movJ
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	55.90485382080078,	-29.299684524536133,	230,	70-20.7, 1) #movJ
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	71.00940704345703,	-30.350120544433594,	230,	56.18449783325195, 1) #movJ
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	71.00940704345703,	-30.350130081176758,	230,	56.18450164794922, 1) #movJ
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	50,	4,	230,	24.7-20.7, 1) #movJ
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	50,	4,	150,	24.7-20.7, 1) #movJ drop
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	64,	11,	150,	27.7-20.7, 1) #movJ out
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	64,	11,	200,	27.7-20.7, 1) #movJ out
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	40,	-28,200,	27.7-20.7, 1) #movJ ret
+	m1.mov([145.73712158203125, -55.97725296020508, None, None])
+	dobotRailState.mov(790) #обход кабельканала
+	m1.mov([207.6950225830078, -15, None, None])
+	dobotRailState.mov(345)
+	m1.movJ([80.67733001708984, -72.33910369873047, None, None]) #[230.28469848632812, 226.3616180419922, 233.01654052734375, -298.7320861816406, 80.67733001708984, -72.33910369873047, 233.01654052734375, -307.0703125]
+	m1.movJ([82.94929504394531, -26.055644989013672, None, None]) #[133.78848266601562, 366.01922607421875, 233.01654052734375, -277.3055725097656, 82.94929504394531, -26.055644989013672, 233.01654052734375, -334.19921875]
+	
+	#drop
+	m1.movJ([None, None, 123, None])#[133.78848266601562, 366.01922607421875, 124.68587493896484, -277.3055725097656, 82.94929504394531, -26.055644989013672, 124.68587493896484, -334.19921875]
+	#out
+	dobotRailState.mov(242)
+	m1.movJ([0, 0, 200, None])
 	
 	#print("working long t4_m1_packet_to_mag_site_f")
 	#time.sleep(2) ####
