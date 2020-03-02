@@ -162,7 +162,8 @@ out from it
 l 780
 
 
-The inverse kinematics solution calculated according to the planned target point is greater than the specified joint angle.
+
+
 The inverse kinematics solution calculated according to the planned target point is greater than the specified joint angle in all modeds.
 1.Check whether the joint angle of the target point is greater than the specified joint angle. Modify and resave it. 
 2.Click "Clear Alarm".

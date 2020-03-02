@@ -1,10 +1,14 @@
-#TODO fix 2nd loop
+﻿#TODO fix 2nd loop
 
 #F4 to toggle prog panel
 
 #int ClearAllAlarmsState(api, id_)
 
+
 from ui_print import *
+
+
+
 		
 
 bDebug=False # print
@@ -35,12 +39,16 @@ import queue
 import inspect
 from math import *
 
+
+
 #from dataclasses import dataclass
 
 from ui import *
 exec(open("./dobot_f.py").read()) #from dobot_f import *		# common scripts		#TODO2 set as https://stackoverflow.com/questions/436198/what-is-an-alternative-to-execfile-in-python-3
 exec(open("./task_btn_f.py").read()) #from task_btn_f import *		# task scripts
 
+from DobotKinematics import *
+kinematics = DobotKinematics()
 import DobotDllType as dType
 api = dType.load()
 
