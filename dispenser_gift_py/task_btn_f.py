@@ -31,7 +31,7 @@ m1_pos_at_mag_site=[180,  (-180),  5, (-10)] #!! must move CCW
 m1_pos_at_pack_dx=-40
 m1_pos_at_pack_Nx=0
 m1_pos_at_pack_Ny=0
-pos_rail_pivot=638  #780max to not hit 
+
 #============= calibrate 0 at Dobot start
 def t0_magR_rail_Home():
 	print(f_nm())
@@ -119,27 +119,51 @@ def t1_m1_pos_at_packet_h():
 	#thread_m1.join(); #TODO  or wait thread_m1_queue empty
 	
 	queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
+xx=32
+yy=[-156, -191, -269, -341.5, -394] #before, pack 0, 1, 2, 3  #-397
+zz=[110,31,41,54,110]
+def m1_mov_before_pack0xy():
+	m1.movJ([-11, -133, None, None]) #before packets, safe
+	m1.mov([None, yy[0], None, None]) #before packets, safe
+	#[32.99159622192383, -153.87136840820312, 139.70315551757812, -7.699620246887207, -11.06596851348877, -133.66490173339844, 139.70315551757812, 137.03125]
+	#for xx 25 m1.movJ([-21, -122.5, None, None]) #before packets, safe
+	
 def t1_m1_pos_at_packet_f():
 	print(f_nm())
 	btn=window.t1_m1_pos_at_packet
 	tskStart_mark(btn, id_m1)
-	#dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
+	
+	
+	l_1stPacket=31
+	l_lastPacket=931  #780max to not hit
+	dL=193-l_1stPacket
+
+	#m1_pos_at_pack_Nx=2
+	#m1_pos_at_pack_Ny=0
+	
+	#print('mov m1 to y:', 25, yy[m1_pos_at_pack_Ny+1]);
+	#print('mov rail to:' ,l_lastPacket-dL*m1_pos_at_pack_Nx);
+	
+	m1_mov_before_pack0xy()
+	m1.movJ([None, None, zz[0], None]) #before packets, safe
+	
+	#==m1.mov([25, yy[0], None, None]) #before packets, safe
+	
+	m1.movJ([None, None, zz[m1_pos_at_pack_Ny+1], None]) 
+	dobotRailState.mov(l_lastPacket-dL*m1_pos_at_pack_Nx)
+	m1.mov([None, yy[m1_pos_at_pack_Ny+1], None, None]) #before packets
 	
 	#pos=m1.getPos()
 	
-	pack0Y=-164
-	packY= pack0Y - m1_pos_at_pack_Nx*(-164-(-240))
-	
-	m1.mov( [-23, pack0Y+33, 50, None]) #safe before all pack
 
-	l_1stPacket=31
-	l_lastPacket=838
-	dL=193-l_1stPacket
 	
-	dobotRailState.mov(31+dL*m1_pos_at_pack_Nx) #right to left
-	dobotRailState.mov(l_lastPacket-dL*m1_pos_at_pack_Nx) #left to right
-	m1.mov( [-23, packY+33, 50, None]) #before row, before detect
-	m1.mov( [-23, packY, 50, None]) #at row, detect
+	dy_out=6 #33
+	pack0Y=-164
+	packY= pack0Y - m1_pos_at_pack_Ny*(-164-(-240))
+	
+
+	#m1.mov( [-23, packY+dy_out, 50, None]) #before row, before detect
+	#m1.mov( [-23, packY, 50, None]) #at row, detect
 	
 	#time.sleep(3) ####
 	'''
@@ -180,10 +204,10 @@ def t2_m1_check_packet_f():
 		pass
 	else:
 		m1_pos_at_pack_Ny+=1
-		if(m1_pos_at_pack_Ny==5):
+		if(m1_pos_at_pack_Ny==4):
 			m1_pos_at_pack_Ny=0
 			m1_pos_at_pack_Nx+=1
-			if(m1_pos_at_pack_Nx==4):
+			if(m1_pos_at_pack_Nx==5):
 				m1_pos_at_pack_Nx=0
 				m1_pos_at_pack_Ny=0
 				print("!! out of packets") #TODO
@@ -228,29 +252,18 @@ def t3_m1_get_packet_f():
 	tskStart_mark(btn, id_m1)
 
 	#!!slow
-	m1.mov([None, None, 232, None]) #pack get
-	m1.mov_relative([0, 33, 0, 0])
-	'''
-	movJ(id_m1,[38.7,	-75.1,	228,	27.8]) #move
-	movJ(id_m1,[56.8,	-84.6,	228,	22]) #
-	movJ(id_m1,[84,		-81.6,	228,	-2]) #
-	#move rail
-	current_pose = dType.GetPose(api, id_magR)
-	dType.SetPTPWithLCmdEx(api, id_magR, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 580, 1)
+	m1.movJ([None, None, 232, None])
 	
-	movJ(id_m1,[83.7,	-29,	228,	27]) #place
-	movJ(id_m1,[83.7,	-29,	145,	27]) #
+	m1_mov_before_pack0xy()
 	
-	movJ(id_m1,[83.7,	8.8,	152,	2]) #out from it
-	movJ(id_m1,[83.7,	8.8,	160,	2]) #
-	
-	movJ(id_m1,[60,		-38,	200,	2]) #
-	movJ(id_m1,[31,		-48,	140,	2]) #
-	
-	#move rail
-	current_pose = dType.GetPose(api, id_magR)
-	dType.SetPTPWithLCmdEx(api, id_magR, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], pos_rail_pivot, 1)
-	'''
+	m1.movJ([-0.34, -124.6, 232, None])
+	dobotRailState.mov(835) #pos where cable don't interrupt movement
+
+	m1.movJ([42.65,	-125.20, 232, None])
+	m1.movJ([63.06,	-117.64, 232, None])
+
+
+
 
 	#print_state_id(id_m1)
 
@@ -272,18 +285,30 @@ def t4_m1_packet_to_mag_site_f():
 	btn=window.t4_m1_packet_to_mag_site
 	tskStart_mark(btn, id_m1)
 	
+	dobotRailState.mov(345)
+	m1.movJ([80.67733001708984, -72.33910369873047, None, None]) #[230.28469848632812, 226.3616180419922, 233.01654052734375, -298.7320861816406, 80.67733001708984, -72.33910369873047, 233.01654052734375, -307.0703125]
+	m1.movJ([82.94929504394531, -26.055644989013672, None, None]) #[133.78848266601562, 366.01922607421875, 233.01654052734375, -277.3055725097656, 82.94929504394531, -26.055644989013672, 233.01654052734375, -334.19921875]
+
+	#drop
+	m1.movJ([None, None, 123, None])#[133.78848266601562, 366.01922607421875, 124.68587493896484, -277.3055725097656, 82.94929504394531, -26.055644989013672, 124.68587493896484, -334.19921875]
+	#out
+	dobotRailState.mov(242)
+	m1.movJ([0, 0, 200, None])
+	'''
+	dType.SetPTPCmdEx_mon(api, id_m1, 2,	227.10,	230.05,	232.00,	16.08, 1) #movXYZ
+	dType.SetPTPCmdEx_mon(api, id_m1, 4,	81.45,	-72.17,	232.00,	16.08, 1) #movJ
+	dobotRailState.mov(493.0)
+	'''
+	
+	'''
 	m1.mov([145.73712158203125, -55.97725296020508, None, None])
 	dobotRailState.mov(790) #обход кабельканала
 	m1.mov([207.6950225830078, -15, None, None])
 	dobotRailState.mov(345)
 	m1.movJ([80.67733001708984, -72.33910369873047, None, None]) #[230.28469848632812, 226.3616180419922, 233.01654052734375, -298.7320861816406, 80.67733001708984, -72.33910369873047, 233.01654052734375, -307.0703125]
 	m1.movJ([82.94929504394531, -26.055644989013672, None, None]) #[133.78848266601562, 366.01922607421875, 233.01654052734375, -277.3055725097656, 82.94929504394531, -26.055644989013672, 233.01654052734375, -334.19921875]
+	'''
 	
-	#drop
-	m1.movJ([None, None, 123, None])#[133.78848266601562, 366.01922607421875, 124.68587493896484, -277.3055725097656, 82.94929504394531, -26.055644989013672, 124.68587493896484, -334.19921875]
-	#out
-	dobotRailState.mov(242)
-	m1.movJ([0, 0, 200, None])
 	
 	#print("working long t4_m1_packet_to_mag_site_f")
 	#time.sleep(2) ####

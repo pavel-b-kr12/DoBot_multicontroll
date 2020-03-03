@@ -47,8 +47,23 @@ from ui import *
 exec(open("./dobot_f.py").read()) #from dobot_f import *		# common scripts		#TODO2 set as https://stackoverflow.com/questions/436198/what-is-an-alternative-to-execfile-in-python-3
 exec(open("./task_btn_f.py").read()) #from task_btn_f import *		# task scripts
 
+'''
 from DobotKinematics import *
 kinematics = DobotKinematics()
+import DobotInverseKinematics
+print(kinematics.coordinatesFromAngles(0,0,0))
+print(kinematics.anglesFromCoordinates(0,0,0))
+print(kinematics.get_distance_from_origin_to_cartesian_point_3D(0,0,0))
+#print(convert_cartesian_coordinate_to_arm_angles(x, y, z, upperArmLength, lowerArmLength, baseHeight))
+#print(get_arm_angles_from_radius_z_coordinate_using_2d_revolute_revolute_inverse_kinematics(r, z, upperArmLength, lowerArmLength))
+try:
+	moveToAngles = DobotInverseKinematics.convert_cartesian_coordinate_to_arm_angles(0,0,0,
+	DobotInverseKinematics.lengthUpperArm, DobotInverseKinematics.lengthLowerArm, DobotInverseKinematics.heightFromBase)
+	print(moveToAngles)
+except:
+	pass
+'''
+		
 import DobotDllType as dType
 api = dType.load()
 
@@ -116,9 +131,15 @@ def connectDobots():
 	global magR
 
 	m1,id_m1=connectDobot("COM3", "m1", QColor(0,111,255,166), window.checkBox_M1, window.label_M1_id) #0   # QtCore.Qt.green QColor(0, 0, 255) Qt.darkYellow
-	magL,id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id) #1 # rail connected
-	magR,id_magR=connectDobot("COM16", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id, True)  #2 
-	
+	magL,id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id, True) #1 # rail connected
+	magR,id_magR=connectDobot("COM16", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id)  #2 
+	dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
+	print('dobots connected')
+	print(dobotStates)
+	print(dobotStates[id_m1])
+	print(dobotStates[id_magL])
+	print(dobotStates[id_magR])
+	print(dobotRailState)
 
 id_nms_default=["id_m1","id_magL","id_magR"] # for 0, 1 , 2
 def id_default(i):
@@ -146,8 +167,7 @@ def connectDobot(com_nm, id_nm, c, checkbox, label, bRail=False):
 	if(id_ == -1):
 		id_=id_default(id_nm) #initial id, for debug or create functions w.o robots
 	
-	dobotStates[id_] = DobotState(id_nm, id_, c, bRail)
-	dobotStates[id_].bOn=onNow
+	dobotStates[id_] = DobotState(id_nm, id_, c, onNow, bRail)
 	'''
 	   
     dType.SetQueuedCmdClear(api)  #Clean Command Queued
@@ -308,11 +328,11 @@ def btn_redraw_end(btn):
 	btn.setEnabled(True)
 	
 #==================== fill btns
-fill=100 # global setting that can be set with left bar in GUI
+fill=100 # global setting that can be set with left bar in GUI . Now assume as percent
 
 def setSpeed(val):
 	if(m1.bOn):
-		dType.SetPTPCommonParams(api, id_m1, 60*val/100, 30*val/100, 1) #DOTO all dobots
+		dType.SetPTPCommonParams(api, id_m1, 1+60*val/100, 2+20*val/100, 1) #speed, acel  #DOTO all dobots  #percent to value
 def btn_fill_redraw():
 	window.btn_fill10.setStyleSheet(style_fill_btn)
 	window.btn_fill50.setStyleSheet(style_fill_btn)
@@ -330,7 +350,7 @@ def btn_handler_btn_fill10():
 	btn_fill_redraw_selected(window.btn_fill10)
 def btn_handler_btn_fill50():
 	global fill
-	fill=50
+	fill=30
 	btn_fill_redraw()
 	btn_fill_redraw_selected(window.btn_fill50)
 	btn_fill_redraw_selected(window.btn_fill10)
@@ -819,12 +839,14 @@ class DobotState():
 	bRail=False
 	dobotRailState=None
 	_lock = threading.Lock()
-	def __init__(self, nm, id_, c, bRail=False):
+	def __init__(self, nm, id_, c, bOn, bRail=False):
 		self.color=c
 		self.nm=nm
 		self.id_=id_
-		if(bDebug or not self.bOn):
-			print ("init", nm, id_)
+		self.bOn=bOn
+		
+		if(bDebug or not bOn):
+			print ("debug", nm, id_)
 			self.pos=[id_*30,0,0,0]
 			self.posCursor=[0,id_*30,0,0]
 		else:
@@ -836,9 +858,10 @@ class DobotState():
 		#bRail=dType.GetDeviceWithL(api, id_)[0]
 		self.bRail=bRail
 		if(bRail):
+			print("dobot id: ",id_, 'checking for rail...')
 			bRail_now=dType.GetDeviceWithL(api, id_)[0]
 			if(bRail_now):
-				print("dobot id: ",id_, " already connected Rail")
+				print(" already connected Rail")
 			else:
 				dType.SetDeviceWithL(api, id_,  True)
 				time.sleep(0.1)  #!del
@@ -977,6 +1000,7 @@ class DobotRailState(): #!!TODO
 	dobotSt=None
 	def __init__(self,id_, dobotSt):
 		self.dobotSt=dobotSt
+		dType.SetPTPLParamsEx(api,id_,50,40,1) 			###!! reail speed, accel
 		print('rail id_:', id_, id_nms_default[id_])
 		if(not bDebug  and self.dobotSt.bOn):
 			print(' rail L:', dType.GetPoseL(api,id_))
