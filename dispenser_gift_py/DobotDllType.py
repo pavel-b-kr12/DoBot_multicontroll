@@ -692,6 +692,7 @@ def GetPose(api, dobotId):
 				continue
 			break
 	#output('GetPose: %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f' %(pose.x,pose.y,pose.z,pose.rHead, pose.joint1Angle,pose.joint2Angle,pose.joint3Angle,pose.joint4Angle))
+	#print('GetPose: %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f' %(pose.x,pose.y,pose.z,pose.rHead, pose.joint1Angle,pose.joint2Angle,pose.joint3Angle,pose.joint4Angle))
 	return [pose.x, pose.y, pose.z,pose.rHead, pose.joint1Angle, pose.joint2Angle, pose.joint3Angle, pose.joint4Angle]
 
 def GetPoseL(api, dobotId):
@@ -1848,7 +1849,7 @@ def GetPoseEx(api, dobotId,  index): #!!TODO index
 			return
 			
 		lr = GetPoseL(api, dobotId)
-		return round(lr[0],  4)
+		return round(lr[0],  4) #!!!
 		
 	pos = GetPose(api, dobotId)
 	return round(pos[index-1],  4)
@@ -2010,7 +2011,7 @@ def printPosNow(api, dobotId, bPrint=False): # TODO move to GetPose
 	if(dobotStates[dobotId] is not None):
 		dobotStates[dobotId].setPosNow(pos) #TODO opt disableupd if run from printPos as it set all together
 	if(bPrint):
-		print("pos of %4s : %.2f %.2f %.2f %.3f J: %.3f %.3f" %( dobotId, pos[0], pos[1], pos[2], pos[3], pos[4], pos[5] ), end="")
+		print("pos of %4s : %.2f %.2f %.2f %.3f J: %.3f %.3f %.3f %.3f" %( dobotId, pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], pos[6], pos[7] ), end="")
 	return pos
 
 

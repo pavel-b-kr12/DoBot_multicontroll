@@ -127,7 +127,7 @@
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
         <property name="text">
-         <string>50%</string>
+         <string>30%</string>
         </property>
        </widget>
       </item>

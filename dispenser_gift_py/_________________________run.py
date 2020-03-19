@@ -133,13 +133,14 @@ def connectDobots():
 	m1,id_m1=connectDobot("COM3", "m1", QColor(0,111,255,166), window.checkBox_M1, window.label_M1_id) #0   # QtCore.Qt.green QColor(0, 0, 255) Qt.darkYellow
 	magL,id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id, True) #1 # rail connected
 	magR,id_magR=connectDobot("COM16", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id)  #2 
-	dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
-	print('dobots connected')
-	print(dobotStates)
-	print(dobotStates[id_m1])
-	print(dobotStates[id_magL])
-	print(dobotStates[id_magR])
-	print(dobotRailState)
+	if(dobotStates[id_m1].bOn):
+		dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
+	# print('dobots connected')
+	# print(dobotStates[id_m1])
+	# print(dobotStates[id_magL])
+	# print(dobotStates[id_magR])
+	# print(dobotRailState)
+	setSpeed(35)
 
 id_nms_default=["id_m1","id_magL","id_magR"] # for 0, 1 , 2
 def id_default(i):
@@ -328,11 +329,11 @@ def btn_redraw_end(btn):
 	btn.setEnabled(True)
 	
 #==================== fill btns
-fill=100 # global setting that can be set with left bar in GUI . Now assume as percent
+fill=35 # global setting that can be set with left bar in GUI . Now assume as percent
 
-def setSpeed(val):
+def setSpeed(percent): #percent to value
 	if(m1.bOn):
-		dType.SetPTPCommonParams(api, id_m1, 1+60*val/100, 2+20*val/100, 1) #speed, acel  #DOTO all dobots  #percent to value
+		dType.SetPTPCommonParams(api, id_m1, 1+60*percent/100, 2+20*percent/100, 1) #speed, acel  #DOTO all dobots  
 def btn_fill_redraw():
 	window.btn_fill10.setStyleSheet(style_fill_btn)
 	window.btn_fill50.setStyleSheet(style_fill_btn)
@@ -802,21 +803,22 @@ def CopyToClipboard(s):
 		#win32clipboard.CloseClipboard()
 		
 def print_selected_PosNow_copy_movXYZ(pos, bCopy=True):
-	s="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_xyz_LINEAR)+",	%.2f,	%.2f,	%.2f,	%.2f, 1"%(pos[0],pos[1],pos[2],pos[3])+") #movXYZ"
-	print(s) #"\r\n",
+	#pos=dobotRailState.dobotSt.getPos(False)
+	sDType="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_xyz_LINEAR)+",	%.2f,	%.2f,	%.2f,	%.2f, 1"%(pos[0],pos[1],pos[2],pos[3])+") #movXYZ"
+	s="dobotStates[%s].mov([%.2f,	%.2f,	%.2f,	%.2f"%(id_nms_default[window.id_selected], pos[0],pos[1],pos[2],pos[3])+"]) #movXYZ"
+	print(sDType) #"\r\n",
 	if(bCopy):
 		CopyToClipboard(s)
 	return s
 def print_selected_PosNow_copy_movJ(pos, bCopy=True):
-	s="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_J)+",	%.2f,	%.2f,	%.2f,	%.2f, 1"%(pos[4],pos[5],pos[6],pos[3])+") #movJ"  #!!fix [7] is wo -pivot
-	print(s)
+	sDType="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_J)+",	%.2f,	%.2f,	%.2f,	%.2f, 1"%(pos[4],pos[5],pos[6],pos[7])+") #movJ"  #!!fix [7] is wo -pivot
+	s="#dobotStates[%s].movJ([%.2f,	%.2f,	%.2f,	%.2f"%(id_nms_default[window.id_selected], pos[4],pos[5],pos[6],pos[7])+"]) #movJ"
+	print(sDType)
 	if(bCopy):
 		CopyToClipboard(s)
 	return s
 def print_rail_PosL_copy(bCopy=True):
-	#pos=dobotRailState.dobotSt.getPos(False)
 	L=dobotRailState.getL(True)
-	#s="dType.SetPTPWithLCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_J)+",	%1s,	%1s,	%1s,	%1s, 1"%(pos[4],pos[5],pos[6],pos[7])+") #movJ"
 	s="dobotRailState.mov("+str(round(L,1))+")"
 	print(L)
 	if(bCopy):

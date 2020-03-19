@@ -24,7 +24,7 @@ def f_nm():
 	
 m1_pos_at_pack=[-2.8,-45.88,25.5,37.22+6,1133]
 m1_pos_before_pack=[23,8,-66,25.5,30+6,1133]
-#J angle  movJ( m1_pos_at_pack[0],  m1_pos_at_pack[1],  m1_pos_at_pack[2], m1_pos_at_pack[3]+dobotStates[id_m1].posPivot[3], 1)
+#J angle  movJ( [ m1_pos_at_pack[0],  m1_pos_at_pack[1],  m1_pos_at_pack[2], m1_pos_at_pack[3]+dobotStates[id_m1].posPivot[3] ])
 
 m1_pos_at_pivot=[0,0, 92,None]
 m1_pos_at_mag_site=[180,  (-180),  5, (-10)] #!! must move CCW
@@ -53,8 +53,11 @@ def t01_m1_find_pivot():
 	queue_put(thread_magR_queue, t01_m1_find_pivot_f)
 	
 def mov_m1_before_pivot():
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	-5,	-5,	186.00,	None, 1) #movJ
-	dobotRailState.mov(0)
+	m1_mov_before_pack0xy() #to don't get packet assidently
+	m1.movJ([None, None, 222, None]) #abowe
+	#m1.movJ([-5,	-5, None, None])
+
+	dobotRailState.mov(0) #!or magL.home()
 	
 def t01_m1_find_pivot_f(): #115.3
 	##!!if pos at pack - move before pack 
@@ -65,15 +68,16 @@ def t01_m1_find_pivot_f(): #115.3
 	#safe pos
 	mov_m1_before_pivot()
 	#mov to pivot
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	-81.21,	-13.49,	186.00,	None, 1) #movJ
+	m1.movJ([-81.21,	-13.49,	186.00,	None]) #movJ
 
-
-	if(m1.getPos()[3]>0):
+	'''
+	if(m1.getPos()[7]>0):
 		print('rotete to positive r')
 		while(True):
 			if(check_packet()): 
 				break
 			m1.movJ_relative([0,  0,  0, 2])
+	'''
 		
 	#!@@ TODO replace w dType SetTRIGCmd		#TODO repeat for avg
 	bFIndCCW_incr=-1
@@ -112,7 +116,7 @@ def t01_m1_find_pivot_f(): #115.3
 
 #=============	
 	
-
+m1_r_pack_piv=-29
 def t1_m1_pos_at_packet_h():
 	print(f_nm())
 	tskMarks_clear_all(False) #also clean queues
@@ -121,10 +125,10 @@ def t1_m1_pos_at_packet_h():
 	queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
 xx=32
 yy=[-156, -191, -269, -341.5, -394] #before, pack 0, 1, 2, 3  #-397
-zz=[110,31,41,54,110]
+zz=[110,31,41,54,55]
 def m1_mov_before_pack0xy():
 	m1.movJ([-11, -133, None, None]) #before packets, safe
-	m1.mov([None, yy[0], None, None]) #before packets, safe
+	m1.mov([None, yy[0], None, m1_r_pack_piv]) #before packets, safe
 	#[32.99159622192383, -153.87136840820312, 139.70315551757812, -7.699620246887207, -11.06596851348877, -133.66490173339844, 139.70315551757812, 137.03125]
 	#for xx 25 m1.movJ([-21, -122.5, None, None]) #before packets, safe
 	
@@ -144,16 +148,24 @@ def t1_m1_pos_at_packet_f():
 	#print('mov m1 to y:', 25, yy[m1_pos_at_pack_Ny+1]);
 	#print('mov rail to:' ,l_lastPacket-dL*m1_pos_at_pack_Nx);
 	
-	m1_mov_before_pack0xy()
-	m1.movJ([None, None, zz[0], None]) #before packets, safe
+	pos=m1.getPos()
+	L=dobotRailState.getL()
 	
-	#==m1.mov([25, yy[0], None, None]) #before packets, safe
+	print("L from pos: ", abs(L - (l_lastPacket-dL*m1_pos_at_pack_Nx)))
+	print(abs(pos[0]-xx))
+	print(abs(pos[3]-zz[m1_pos_at_pack_Ny+1]))
+	if( abs(L - (l_lastPacket-dL*m1_pos_at_pack_Nx)) >2 or  abs(pos[0]-xx) >3 or abs(pos[3]-zz[m1_pos_at_pack_Ny+1])>100  ):
+		m1_mov_before_pack0xy()
+		m1.movJ([None, None, zz[0], None]) #before packets, safe
+		
+		#==m1.mov([25, yy[0], None, None]) #before packets, safe
+		
+		m1.movJ([None, None, zz[m1_pos_at_pack_Ny+1], None]) 
+		dobotRailState.mov(l_lastPacket-dL*m1_pos_at_pack_Nx)
+
+	m1.mov([None, yy[m1_pos_at_pack_Ny+1], zz[m1_pos_at_pack_Ny+1], m1_r_pack_piv]) #before packets
+	#m1.movJ([None,None,None,m1_r_pack_piv])
 	
-	m1.movJ([None, None, zz[m1_pos_at_pack_Ny+1], None]) 
-	dobotRailState.mov(l_lastPacket-dL*m1_pos_at_pack_Nx)
-	m1.mov([None, yy[m1_pos_at_pack_Ny+1], None, None]) #before packets
-	
-	#pos=m1.getPos()
 	
 
 	
