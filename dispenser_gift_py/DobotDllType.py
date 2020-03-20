@@ -493,8 +493,8 @@ def output(str):
 	#sys.stdout.flush()
 	pass
 	
-def SearchDobot(api,  maxLen=1000):
-	szPara = create_string_buffer(1000) #((len(str(maxLen)) + 4) * maxLen + 10)
+def SearchDobot(api,  maxLen=100):
+	szPara = create_string_buffer(100) #((len(str(maxLen)) + 4) * maxLen + 10)
 	l = api.SearchDobot(szPara,  maxLen)
 	if l == 0:
 		return []

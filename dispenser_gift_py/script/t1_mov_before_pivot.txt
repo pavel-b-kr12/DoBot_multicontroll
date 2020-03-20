@@ -1,0 +1,5 @@
+id_=id_m1
+dob=dobotStates[id_]
+#print("pos: ",dobotStates[id_].pos)
+dType.SetPTPCmdEx_mon(api, id_m1, 4,	-81.21,	-13.49,	186.00,	None, 1) #movJ
+#print("pos: ",dobotStates[id_].pos)

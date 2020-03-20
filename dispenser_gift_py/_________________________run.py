@@ -12,7 +12,7 @@ from ui_print import *
 		
 
 bDebug=False # print
-bConnectTascs=False	#!!TODO
+bConnectTascs=True	#!!TODO
 
 bKeyboardLeds=False
 bMainBtns=False
@@ -39,7 +39,9 @@ import queue
 import inspect
 from math import *
 
-
+from configparser import ConfigParser #save load ini file
+config = ConfigParser()
+config.read('config.ini')
 
 #from dataclasses import dataclass
 
@@ -121,7 +123,8 @@ def checkBox_ConnectAll_click(state):
 		connectDobots()
 	else: #0
 		disconnectDobots()
-
+		
+id_nms_default=[None, None, None, None, None, None, None, None, None, None]
 def connectDobots():
 	global id_m1 #also in dobotStates[id_m1]
 	global id_magL
@@ -129,20 +132,45 @@ def connectDobots():
 	global m1
 	global magL
 	global magR
+	
+	print(dType.SearchDobot(api))
+	USBnms=dType.SearchDobot(api)
+	#print(dType.GetDeviceName(api, id_))
+	
 
-	m1,id_m1=connectDobot("COM3", "m1", QColor(0,111,255,166), window.checkBox_M1, window.label_M1_id) #0   # QtCore.Qt.green QColor(0, 0, 255) Qt.darkYellow
-	magL,id_magL=connectDobot("COM4", "magL", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id, True) #1 # rail connected
-	magR,id_magR=connectDobot("COM16", "magR", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id)  #2 
+	usb_n=0
+	while(usb_n<3):
+		id_ = connectCOM(USBnms[usb_n])
+		nm=dType.GetDeviceName(api, id_)[0]
+		#print('found %s with id: %d at USB: %s'%(nm, id_, USBnms[usb_n]))
+		if(nm.find('d2') is not -1):
+			magR,id_magL=connectDobot(id_, "magR", QColor(255,177,0,166), window.checkBox_MagL, window.label_MagL_id, True) #1 # rail connected
+			id_nms_default[id_magR]='id_magR'
+		elif (nm.find('d1') is not -1):
+			magL,id_magR=connectDobot(id_, "magL", QColor(0,255,0,166), window.checkBox_MagR, window.label_MagR_id)  #2 
+			id_nms_default[id_magL]='id_magL'
+		elif (nm.find('M1') is not -1):
+			m1,id_m1=connectDobot(id_, "m1", QColor(0,111,255,166), window.checkBox_M1, window.label_M1_id) #0   # QtCore.Qt.green QColor(0, 0, 255) Qt.darkYellow
+			id_nms_default[id_m1]='id_m1'
+		usb_n+=1
+
+
+		
 	if(dobotStates[id_m1].bOn):
+		print(dType.GetArmOrientation(api, id_m1))
 		dType.SetArmOrientation(api, id_m1, 0, 1) #!! SetArmOrientationEx -> SetArmOrientation
+		print(dType.GetArmOrientation(api, id_m1))
 	# print('dobots connected')
 	# print(dobotStates[id_m1])
 	# print(dobotStates[id_magL])
 	# print(dobotStates[id_magR])
 	# print(dobotRailState)
-	setSpeed(35)
+	m1.posPivot_loadFromFile()
 
-id_nms_default=["id_m1","id_magL","id_magR"] # for 0, 1 , 2
+	setSpeed(35)
+	
+
+
 def id_default(i):
 	switcher={
 			"m1":0,
@@ -151,8 +179,7 @@ def id_default(i):
 		}
 	return switcher.get(i,2) #default 2
 		 
-def connectDobot(com_nm, id_nm, c, checkbox, label, bRail=False):
-	id_ = connectCOM(com_nm)  # 0
+def connectDobot(id_, id_nm, c, checkbox, label, bRail=False):
 	
 	checkbox.setChecked(id_ != -1)  # TODO mark red if fail connect COM
 	label.setText(str(id_))  # f'{10}'
@@ -182,7 +209,8 @@ def connectDobot(com_nm, id_nm, c, checkbox, label, bRail=False):
 	
 	dType.DisconnectDobot(api)
 	'''
-
+	
+	#print(dType.GetDeviceName(api, id_))
 	return dobotStates[id_], id_
 			
 def disconnectDobots():
@@ -215,10 +243,12 @@ def btn_alarm_check_clear_f(id_, btn):
 	
 	print("after clear",dType.GetAlarmsState(api, id_))
 def btnHome_f(id_,btn=None):
+	#print (id_, id_nms_default[id_])
 	if(id_==id_m1): #do not home m1, only clear err !!TODO and goto initial
 		dType.ClearAllAlarmsState(api, id_)
+		m1.movJ([-5,	-5, None, None])
 		return
-		
+
 	if(btn is not None):
 		tskStart_mark(btn, id_)
 	dType.ClearAllAlarmsState(api, id_)
@@ -804,15 +834,17 @@ def CopyToClipboard(s):
 		
 def print_selected_PosNow_copy_movXYZ(pos, bCopy=True):
 	#pos=dobotRailState.dobotSt.getPos(False)
-	sDType="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_xyz_LINEAR)+",	%.2f,	%.2f,	%.2f,	%.2f, 1"%(pos[0],pos[1],pos[2],pos[3])+") #movXYZ"
-	s="dobotStates[%s].mov([%.2f,	%.2f,	%.2f,	%.2f"%(id_nms_default[window.id_selected], pos[0],pos[1],pos[2],pos[3])+"]) #movXYZ"
+	id_nm=id_nms_default[window.id_selected]
+	sDType="dType.SetPTPCmdEx_mon(api, "+ id_nm +", "+str(PTP_mode_xyz_LINEAR)+",	%.2f,	%.2f,	%.2f,	%.2f, 1"%(pos[0],pos[1],pos[2],pos[3])+") #movXYZ"
+	s="dobotStates[%s].mov([%.2f,	%.2f,	%.2f,	%.2f"%(id_nm, pos[0],pos[1],pos[2],pos[3])+"]) #movXYZ"
 	print(sDType) #"\r\n",
 	if(bCopy):
 		CopyToClipboard(s)
 	return s
 def print_selected_PosNow_copy_movJ(pos, bCopy=True):
-	sDType="dType.SetPTPCmdEx_mon(api, "+id_nms_default[window.id_selected] +", "+str(PTP_mode_J)+",	%.2f,	%.2f,	%.2f,	%.2f, 1"%(pos[4],pos[5],pos[6],pos[7])+") #movJ"  #!!fix [7] is wo -pivot
-	s="#dobotStates[%s].movJ([%.2f,	%.2f,	%.2f,	%.2f"%(id_nms_default[window.id_selected], pos[4],pos[5],pos[6],pos[7])+"]) #movJ"
+	id_nm=id_nms_default[window.id_selected]
+	sDType="dType.SetPTPCmdEx_mon(api, "+id_nm+", "+str(PTP_mode_J)+",	%.2f,	%.2f,	%.2f,	%.2f, 1"%(pos[4],pos[5],pos[6],pos[7])+") #movJ"  #!!fix [7] is wo -pivot
+	s="#dobotStates[%s].movJ([%.2f,	%.2f,	%.2f,	%.2f"%(id_nm, pos[4],pos[5],pos[6],pos[7])+"]) #movJ"
 	print(sDType)
 	if(bCopy):
 		CopyToClipboard(s)
@@ -834,7 +866,7 @@ class DobotState():
 	posCursor=[0,0,0,0] #target, updates on XY plot click or drom some functions that set target before exec move
 	posCursorL=0;
 	posHome=[0,0,0,0] # updates after run btnHome_h
-	posPivot=[0,0,0,0,0]
+	posPivot=[0,0,0,0,0,0,0,0]
 	IODI=[]
 	IOAI=[]
 	bOn=False #Dobot online
@@ -871,7 +903,17 @@ class DobotState():
 			global dobotRailState
 			dobotRailState=DobotRailState(id_,  self)
 			self.dobotRailState=dobotRailState
-
+	
+	
+	
+	def posPivot_loadFromFile(self): #TODO draw it
+		self.posPivot[3] = config.getfloat('pivot_m1', 'r')
+	def posPivot_set(self, pos): #TODO draw it
+		self.posPivot=pos
+		print(pos)
+		config.set('pivot_m1', 'r', str(pos[3]))
+		with open('config.ini', 'w') as configfile:
+			config.write(configfile)
 	def getPos(self, bRedraw=True):
 		self._lock.acquire()
 		self.pos=dType.GetPose(api, self.id_)
@@ -938,7 +980,7 @@ class DobotState():
 	#-------------------------------
 	def mov(self, pos):	#relative to pivot r-axis
 		if(pos[3] is not None):
-			 pos[3]+=self.posPivot[3]
+			 pos[3]+=self.posPivot[3] ###!! [7]
 		dType.SetPTPCmdEx_mon(api, self.id_, 2, pos[0],  pos[1],  pos[2], pos[3], 1)	
 	def mov_relative(self, pos):
 		#print('mov_relative to ', pos)

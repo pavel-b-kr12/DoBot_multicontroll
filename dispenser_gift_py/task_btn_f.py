@@ -103,7 +103,7 @@ def t01_m1_find_pivot_f(): #115.3
 	print("find target at: ",pos_m1)
 	#print("find target at: ",pos_m1[0:4],"  r:", pos_m1[7])
 	
-	m1.posPivot=dType.GetPose(api, id_m1) #TODO draw it
+	m1.posPivot_set(m1.getPos())
 	
 	# firstly need mov out of pivot to use cartesian XYZ, because can't go for j 0,0 other way then movJ
 	#m1.movJ([-14.221565246582031,	-47.71931838989258,	None,	None])
@@ -141,6 +141,8 @@ def t1_m1_pos_at_packet_f():
 	l_1stPacket=31
 	l_lastPacket=931  #780max to not hit
 	dL=193-l_1stPacket
+	
+	l_lastPacket=l_lastPacket-dL #!! this skip last column to safe debug
 
 	#m1_pos_at_pack_Nx=2
 	#m1_pos_at_pack_Ny=0
@@ -191,8 +193,8 @@ def t1_m1_pos_at_packet_f():
 	print("m1_pos_at_packet", dType.GetPoseEx(api, id_m1, 1))
 	'''
 	tskEnd_mark(btn)
-	#if(bConnectTascs):
-	#queue_put(thread_m1_queue, t2_m1_check_packet_f)
+	if(bConnectTascs):
+		queue_put(thread_m1_queue, t2_m1_check_packet_f)
 
 
 
@@ -210,8 +212,8 @@ def t2_m1_check_packet_f():
 	tskStart_mark(btn, id_m1)
 	
 	if(check_packet()):
-		#if(bConnectTascs):
-		#queue_put(thread_m1_queue,t3_m1_get_packet_f)
+		if(bConnectTascs):
+			queue_put(thread_m1_queue,t3_m1_get_packet_f)
 		#time.sleep(2) ####
 		pass
 	else:
@@ -237,8 +239,8 @@ def t2_m1_check_packet_f():
 				m1_pos_at_pack_Nx=0
 		'''	
 			
-		#if(bConnectTascs):
-		#queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
+		if(bConnectTascs):
+			queue_put(thread_m1_queue, t1_m1_pos_at_packet_f)
 		#time.sleep(2) ####
 	
 	tskEnd_mark(btn)
@@ -297,47 +299,43 @@ def t4_m1_packet_to_mag_site_f():
 	btn=window.t4_m1_packet_to_mag_site
 	tskStart_mark(btn, id_m1)
 	
+	#if(bConnectTascs):
+	queue_put(thread_magL_queue,t5_magL_wait_m1_f)
+
 	dobotRailState.mov(345)
 	m1.movJ([80.67733001708984, -72.33910369873047, None, None]) #[230.28469848632812, 226.3616180419922, 233.01654052734375, -298.7320861816406, 80.67733001708984, -72.33910369873047, 233.01654052734375, -307.0703125]
+	
+	#wait place is free
+	
 	m1.movJ([82.94929504394531, -26.055644989013672, None, None]) #[133.78848266601562, 366.01922607421875, 233.01654052734375, -277.3055725097656, 82.94929504394531, -26.055644989013672, 233.01654052734375, -334.19921875]
-
+	#m1.movJ([None, None, None, 90])
+	#dobotStates[id_magR].mov([133.79,	366.02,	234.00,	64.89]) #movXYZ
+	dobotStates[id_magR].movJ([None,	None,	None,	8.00]) #movJ
+	
 	#drop
 	m1.movJ([None, None, 123, None])#[133.78848266601562, 366.01922607421875, 124.68587493896484, -277.3055725097656, 82.94929504394531, -26.055644989013672, 124.68587493896484, -334.19921875]
-	#out
-	dobotRailState.mov(242)
-	m1.movJ([0, 0, 200, None])
-	'''
-	dType.SetPTPCmdEx_mon(api, id_m1, 2,	227.10,	230.05,	232.00,	16.08, 1) #movXYZ
-	dType.SetPTPCmdEx_mon(api, id_m1, 4,	81.45,	-72.17,	232.00,	16.08, 1) #movJ
-	dobotRailState.mov(493.0)
-	'''
 	
-	'''
-	m1.mov([145.73712158203125, -55.97725296020508, None, None])
-	dobotRailState.mov(790) #обход кабельканала
-	m1.mov([207.6950225830078, -15, None, None])
-	dobotRailState.mov(345)
-	m1.movJ([80.67733001708984, -72.33910369873047, None, None]) #[230.28469848632812, 226.3616180419922, 233.01654052734375, -298.7320861816406, 80.67733001708984, -72.33910369873047, 233.01654052734375, -307.0703125]
-	m1.movJ([82.94929504394531, -26.055644989013672, None, None]) #[133.78848266601562, 366.01922607421875, 233.01654052734375, -277.3055725097656, 82.94929504394531, -26.055644989013672, 233.01654052734375, -334.19921875]
-	'''
+	dobotRailState.mov(265.0)
+
+	#m1.mov([234.47,	278.99,	216.00,	65.78]) #movXYZ
+	#dobotStates[id_magR].movJ([74.30,	-48.69,	216.00,	40.16]) #movJ
+	#dobotRailState.mov(345.0)
+
+	#out x
+	dobotRailState.mov(242)
+	#out y
+	m1.movJ([74.30,	-48.69,	None,	None]) #movJ .mov([234.47,	278.99,	216.00,	149.78]) #movXYZ
+	#m1.mov_relative([0, -90, 0, 0]
+	#m1.movJ([0, 0, 200, None])
+	
+
+#r to left is
+#dobotStates[id_magR].mov([133.79,	366.02,	123.00,	70.62]) #movXYZ
+#dobotStates[id_magR].movJ([82.95,	-26.06,	123.00,	13.73]) #movJ
 	
 	
 	#print("working long t4_m1_packet_to_mag_site_f")
 	#time.sleep(2) ####
-	#print_state_id(id_m1)
-
-
-	
-	#dType.SetWAITCmdEx(api, id_m1, 1, 1) #api, dobotId, waitTime, isQueued
-	#dType.SetQueuedCmdStartExec(api,dobotId)
-	
-	#current_pose = dType.GetPose(api, dobotId)
-	#print("start_Mag current_pose:", current_pose)
-	#dType.SetPTPWithLCmdEx(api, dobotId, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 500, 1) #SetPTPWithLCmdEx(api, dobotId, ptpMode, x, y, z, rHead,  l, isQueued=0)
-	
-	#current_pose = dType.GetPose(api, dobotId)
-	#print("start_Mag current_pose:", current_pose)
-	#dType.SetPTPWithLCmdEx(api, dobotId, 1, current_pose[0], current_pose[1], current_pose[2], current_pose[3], 400, 1)
 	
 	#end thread. Next loop started from mag
 	tskEnd_mark(btn)
@@ -355,17 +353,25 @@ def t5_magL_wait_m1_f():
 	print(f_nm())
 	btn=window.t5_magL_wait_m1
 	
-	dType.SetPTPCmdEx_mon(api, id_magL, 2, pos_gift_get[0],  pos_gift_get[1],  pos_gift_get[2], pos_gift_get[3], 1)
-	print_state_id(id_magL)
-	time.sleep(2) ####
+	
+	#time.sleep(2)
+	
+	#dobotStates[id_magL].mov([186.09,	2.09,	-12.06,	-21.10]) #movXYZ
+	magL.movJ([0.64,	27.26,	63.95,	-21.74]) #movJ #pos to wait
+
 	
 	tskWait_mark(btn, id_m1)
 	print('t5_magL_wait_m1_f     wait join m1')
 	thread_m1_queue.join()
+	print('seems like M1 wokr done..')
+	
+
+		
 	tskStart_mark(btn, id_m1)
 	#time.sleep(1)
 	
-	queue_put(thread_magL_queue,t6_magL_give_and_back_f)
+	if(bConnectTascs):
+		queue_put(thread_magL_queue,t6_magL_give_and_back_f)
 	
 	tskEnd_mark(btn)
 
@@ -382,27 +388,37 @@ def t6_magL_give_and_back_f(): #! re not back
 	btn=window.t6_magL_give_and_back
 	tskStart_mark(btn, id_m1)
 
-
-	dType.SetPTPCmdEx_mon(api, id_magL, 2, pos_gift_place[0],  pos_gift_place[1],  pos_gift_place[2], pos_gift_place[3], 1)
-	print_state_id(id_magL)
-	time.sleep(2) ####
 	
-		    # SetIOMultiplexingEx(api, dobotId, 2,  1, isQueued)
+	#at packet
+	#dobotStates[id_magL].mov([276.01,	1.00,	47.94,	-21.10]) #movXYZ
+	magL.movJ([0.21,	37.32,	23.84,	-21.30]) #movJ 
+
+	#get
+	#dobotStates[id_magL].mov([256.67,	1.00,	161.26,	-21.10]) #movXYZ
+	magL.movJ([0.22,	24.02,	-14.96,	-21.32]) #movJ
+
+	#move
+	#dobotStates[id_magL].mov([-0.00,	-259.64,	99.94,	-29.10]) #movXYZ
+	magL.movJ([-90.00,	23.96,	9.17,	60.90]) #movJ
+	
+	#give
+	#dobotStates[id_magL].mov([-0.00,	-298.42,	73.94,	-29.10]) #movXYZ
+	magL.movJ([-90.00,	43.89,	9.14,	60.90]) #movJ
+
+		
+
+	tskEnd_mark(btn)
+
+	tskMarks_clear_all(False)	###!!!
+	
+	queue_put(thread_m1_queue, t1_m1_pos_at_packet_f) #start next loop  ##!! move to  t5_magL_wait_m1_f
+	
+	
+	
+	
+	# SetIOMultiplexingEx(api, dobotId, 2,  1, isQueued)
     # SetIOMultiplexingEx(api, dobotId, 4,  2, isQueued)
     # SetIODOEx(api, dobotId, 2, enableCtrl, isQueued)
     # SetIOPWMEx(api, dobotId, 4, 10000, power, isQueued)
-	
-			#dType.SetIODOEx(api, rID, 17, 1, 1)
-			#dType.SetIODOEx(api, rID, 18, 0, 1)
-			#dType.SetWAITCmdEx(api, rID, 500, 1)
-		# dType.SetIODOEx(api, rID, 17, 1, 1)
-		# dType.SetIODOEx(api, rID, 18, 1, 1)
-		
-	queue_put(thread_m1_queue, t2_m1_check_packet_f) #start next loop  ##!! move to  t5_magL_wait_m1_f
-	
-	tskEnd_mark(btn)
-	tskMarks_clear_all(False)	
-	
-	
 	
 	

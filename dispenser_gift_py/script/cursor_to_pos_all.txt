@@ -1,0 +1,2 @@
+nmFunction = 'mov_to_cursor_selected'dobotRailState.dobotSt.setPosCursorLRail(dobotRailState.getL(False), False)
+m1.setPosCursorXYZR(m1.getPos(False), False)magL.setPosCursorXYZR(magL.getPos(False), False)magR.setPosCursorXYZR(magR.getPos(False))
